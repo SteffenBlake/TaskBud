@@ -11,7 +11,7 @@ using TaskBud.Business;
 using TaskBud.Business.Services;
 using System.Threading;
 using Markdig;
-using TaskBud.Website.Hubs;
+using TaskBud.Business.Hubs;
 
 namespace TaskBud.Website
 {
@@ -66,6 +66,7 @@ namespace TaskBud.Website
             services.AddTransient<InvitationManager>();
             services.AddTransient<TaskGroupManager>();
             services.AddTransient<TaskManager>();
+            services.AddTransient<HistoryManager>();
             services.AddTransient<PriorityHelper>();
         }
 

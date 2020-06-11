@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Claims;
 
-namespace TaskBud.Website.Extensions
+namespace TaskBud.Business.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {

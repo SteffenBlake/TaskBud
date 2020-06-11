@@ -10,7 +10,6 @@
     var assignedClass = Model.IsAssigned ? "assigned" : "unassigned";
     var descriptionClass = Model.IsAssigned ? "text-muted" : "font-weight-bold";
     var dataRight = Model.IsAssigned ? "UnAssign" : "Assign";
-    var dataLeft = Model.Complete ? "ReOpen" : "Complete";
 }
 
 <div id="task-@Model.Id" data-assigned="@Model.AssignedUserId" data-priority="@((int)Model.Priority)" data-date="@Model.CreationDate.ToString("O")">
@@ -25,16 +24,9 @@
                 <div class="swipe-left" style="background:orange"><i class="fa fa-3x fa-clipboard-list"></i></div>
             }
 
-            @if (Model.Complete)
-            {
-                <div class="swipe-right" style="background:darkred"><i class="fa fa-3x fa-times-circle"></i></div>
-            }
-            else
-            {
-                <div class="swipe-right" style="background:darkgreen"><i class="fa fa-3x fa-check-circle"></i></div>
-            }
+            <div class="swipe-right" style="background:darkgreen"><i class="fa fa-3x fa-check-circle"></i></div>
         </div>
-        <div class="swipe-bar d-inline-flex justify-content-start align-items-center w-100 mw-100 @assignedClass" data-target="task-@Model.Id" data-left="@dataLeft" data-right="@dataRight" data-id="@Model.Id">
+        <div class="swipe-bar d-inline-flex justify-content-start align-items-center w-100 mw-100 @assignedClass" data-target="task-@Model.Id" data-left="Complete" data-right="@dataRight" data-id="@Model.Id">
             <i style="text-align:center;width:10%;color:@PriorityHelper.ColorFor(Model.Priority)" class="flex-shrink-0 fa @PriorityHelper.IconFor(Model.Priority)"></i>
             <div class="d-flex flex-column justify-content-start flex-grow-1 flex-shrink-1 pt-1 pb-2 pr-2" style="min-width:0" role="button" data-toggle="collapse" data-target="#collapse-@Model.Id">
                 <div class="d-inline-flex justify-content-between">

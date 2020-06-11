@@ -13,5 +13,6 @@ namespace TaskBud.Business.Data
         public DbSet<InvitationCode> InvitationCodes { get; set; }
         public DbSet<TaskGroup> TaskGroups { get; set; }
         public DbSet<TaskItem> TaskItems { get; set; }
+        public DbSet<TaskHistory> TaskHistory { get; set; }
     }
 }

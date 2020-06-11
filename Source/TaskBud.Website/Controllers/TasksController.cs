@@ -2,11 +2,10 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+using TaskBud.Business.Extensions;
+using TaskBud.Business.Hubs;
 using TaskBud.Business.Models.Tasks;
 using TaskBud.Business.Services;
-using TaskBud.Website.Extensions;
-using TaskBud.Website.Hubs;
 
 namespace TaskBud.Website.Controllers
 {
@@ -15,25 +14,23 @@ namespace TaskBud.Website.Controllers
     public class TasksController : Controller
     {
         private TaskManager TaskManager { get; }
-        private IHubContext<TaskHub> TaskHubContext { get; }
 
-        public TasksController(TaskManager taskManager, IHubContext<TaskHub> taskHub)
+        public TasksController(TaskManager taskManager)
         {
             TaskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
-            TaskHubContext = taskHub ?? throw new ArgumentNullException(nameof(taskHub));
         }
 
         [HttpGet("index")]
         public async Task<IActionResult> Index(string taskGroupId)
         {
-            var data = await TaskManager.IndexAsync(User.GetLoggedInUserId<string>(), taskGroupId);
+            var data = await TaskManager.IndexAsync(User, taskGroupId);
             return View(data);
         }
 
         [HttpGet("{taskId}")]
         public async Task<IActionResult> Read(string taskId)
         {
-            var readData = await TaskManager.ReadAsync(taskId);
+            var readData = await TaskManager.ReadAsync(User, taskId);
 
             return PartialView("_TaskItem", readData);
         }
@@ -50,9 +47,7 @@ namespace TaskBud.Website.Controllers
         {
             if (ModelState.IsValid)
             {
-                var readData = await TaskManager.CreateAsync(writeData, User.GetLoggedInUserId<string>());
-
-                await TaskHubContext.Clients.All.SendAsync(TaskHub.Created, readData.Id);
+                await TaskManager.CreateAsync(User, writeData);
 
                 return RedirectToAction("Index", new { writeData.TaskGroupId });
             }
@@ -65,7 +60,7 @@ namespace TaskBud.Website.Controllers
         [HttpGet("{id}/update")]
         public async Task<IActionResult> Update(string id)
         {
-            var data = await TaskManager.ReadAsync(id);
+            var data = await TaskManager.ReadAsync(User, id);
             return View(data);
         }
 
@@ -74,9 +69,7 @@ namespace TaskBud.Website.Controllers
         {
             if (ModelState.IsValid)
             {
-                var readData = await TaskManager.UpdateAsync(writeData);
-
-                await TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, readData.Id);
+                await TaskManager.UpdateAsync(User, writeData);
 
                 return RedirectToAction("Index", new { GroupId = writeData.TaskGroupId });
             }
@@ -91,9 +84,7 @@ namespace TaskBud.Website.Controllers
         { 
             userId ??= User.GetLoggedInUserId<string>();
 
-            await TaskManager.Assign(taskId, userId);
-
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Assigned, userId, taskId);
+            await TaskManager.Assign(User, taskId, userId);
 
             return Ok();
         }
@@ -101,11 +92,7 @@ namespace TaskBud.Website.Controllers
         [HttpPost("{taskId}/un-assign")]
         public async Task<IActionResult> UnAssign(string taskId)
         {
-            var previousUserId = (await TaskManager.ReadAsync(taskId)).AssignedUserId;
-
-            await TaskManager.UnAssign(taskId);
-
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.UnAssigned, previousUserId, taskId);
+            await TaskManager.UnAssign(User, taskId);
 
             return Ok();
         }
@@ -113,19 +100,7 @@ namespace TaskBud.Website.Controllers
         [HttpPost("{taskId}/complete")]
         public async Task<IActionResult> Complete(string taskId)
         {
-            await TaskManager.Complete(taskId);
-
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Completed, taskId);
-
-            return Ok();
-        }
-
-        [HttpPost("{taskId}/re-open")]
-        public async Task<IActionResult> ReOpen(string taskId)
-        {
-            var readData = await TaskManager.ReOpen(taskId);
-
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.ReOpened, readData.AssignedUser, taskId);
+            await TaskManager.Complete(User, taskId);
 
             return Ok();
         }

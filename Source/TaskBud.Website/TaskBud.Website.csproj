@@ -35,4 +35,9 @@
     <ProjectReference Include="..\TaskBud.Business\TaskBud.Business.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Pages\" />
+  </ItemGroup>
+
 </Project>

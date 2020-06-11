@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
-namespace TaskBud.Website.Extensions
+namespace TaskBud.Business.Extensions
 {
     public static class EnumExtensions
     {

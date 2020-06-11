@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
-namespace TaskBud.Website.Hubs
+namespace TaskBud.Business.Hubs
 {
     public class TaskHub : Hub
     {

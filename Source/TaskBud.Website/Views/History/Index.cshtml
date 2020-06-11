@@ -1,0 +1,98 @@
+﻿@using TaskBud.Business.Extensions
+@using TaskBud.Business.Models.TaskHistories
+@using Microsoft.AspNetCore.Html
+
+@model VMTaskHistoryIndex
+
+@{
+    ViewBag.Title = "History - " + User.GetLoggedInUserName();
+}
+
+<h2>@ViewBag.Title</h2>
+
+<div class="d-flex">
+    <h3 class="flex-grow-1 flex-shrink-1 text-truncate">@ViewData["Title"]</h3>
+    <div class="flex-shrink-0 flex-grow-0 mb-2">
+        @for (int limit = 40; limit <= 80; limit += 20)
+         {
+            if (Model.Limit == limit)
+            {
+        <button type="button" class="btn btn-warning btn-sm mr-2" disabled>@limit</button>
+            }
+            else
+            {
+                <a asp-action="Index" asp-route-limit="@limit" class="btn btn-warning btn-sm mr-2">@limit</a>;
+            }
+         }
+    </div>
+</div>
+
+<div id="history-items">
+    @foreach (var item in Model.Items)
+    {
+        <partial name="_HistoryItem" model="item" />
+    }
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", onReady);
+
+    function onReady() {
+        enableSwiping(document);
+    }
+
+
+    function enableSwiping(element) {
+        $(element.querySelectorAll(".swipe-bar")).swipeable(
+            {
+                distance: 80,
+                rightMax: 0,
+
+                left: onSwipeLeft,
+                leftMax: 0.35,
+                leftMinTrigger: 0.30,
+            }
+        );
+    }
+
+    function onSwipeLeft(sender) {
+        var id = sender.getAttribute("data-id");
+        var dataLeft = sender.getAttribute("data-left");
+        var targetId = sender.getAttribute("data-target");
+        var target = document.getElementById(targetId);
+
+        if (dataLeft === "Undo") {
+            onUndo(id, target);
+        } else if (dataLeft === "Redo") {
+            onRedo(id, target);
+        }
+    }
+
+    function onUndo(id, target) {
+        var url = "@Url.Action("Undo", new { historyId = Guid.Empty })";
+        url = url.replace("@Guid.Empty", id);
+
+        fetch(url, { method: 'POST' })
+            .then(response => response.text())
+            .then(html => replaceHistory(target, html));
+    }
+
+    function onRedo(id, target) {
+        var url = "@Url.Action("Redo", new {historyId = Guid.Empty})";
+        url = url.replace("@Guid.Empty", id);
+
+        fetch(url, { method: 'POST' })
+            .then(response => response.text())
+            .then(html => replaceHistory(target, html));
+    }
+
+    function replaceHistory(target, html) {
+        target.insertAdjacentHTML('afterend', html);
+        var newHistory = target.nextElementSibling;
+        target.remove();
+
+        enableSwiping(newHistory);
+    }
+
+</script>

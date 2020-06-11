@@ -1,0 +1,39 @@
+﻿@using TaskBud.Business.Extensions
+@using TaskBud.Business.Models.TaskHistories
+@using TaskBud.Website.Extensions
+@model VMTaskHistory
+
+@{
+    var actionColor = Model.IsUndone ? "darkgreen" : "darkred";
+    var actionIcon = Model.IsUndone ? "fa-redo" : "fa-undo";
+    var dataLeft = Model.IsUndone ? "Redo" : "Undo";
+}
+
+<div id="history-@Model.Id">
+    <div class="swipe-container">
+        <div class="swipe-labels">
+            <div class="swipe-left" style="background: darkred"></div>
+            @if (Model.IsUndone)
+            {
+                <div class="swipe-right" style="background-color:@actionColor"><i class="fa fa-3x @actionIcon"></i></div>
+            }
+            else
+            {
+                <div class="swipe-right" style="background-color:@actionColor"><i class="fa fa-3x @actionIcon"></i></div>
+            }
+        </div>
+        <div class="swipe-bar d-inline-flex justify-content-start align-items-center w-100 mw-100" data-target="history-@(Model.Id)" data-left="@(dataLeft)" data-id="@(Model.Id)">
+            <i style="text-align:center; width:10%; color:@(actionColor)" class="flex-shrink-0 fa @(actionIcon)"></i>
+            <div class="d-flex flex-column justify-content-start flex-grow-1 flex-shrink-1 pt-1 pb-2 pr-2" style="min-width:0">
+                <div class="d-inline-flex justify-content-between">
+                    <span class="font-weight-bold text-secondary text-truncate flex-shrink-1 pr-2" style="min-width:0">@(Model.TaskTitle)</span>
+                    <span class="font-weight-bold text-primary flex-shrink-0">@(Model.CreatedOn.ToHumanReadable())</span>
+                </div>
+                <div class="d-inline-flex justify-content-between">
+                    <span class="swipe-text text-truncate flex-shrink-1">@(Model.Action.GetDisplayName()) - @(Model.NewValue)</span>
+                    <span class="font-weight-bold flex-shrink-0">@(Model.UserName)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

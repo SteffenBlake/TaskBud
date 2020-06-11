@@ -1,5 +1,5 @@
-﻿@using TaskBud.Website.Hubs
-@using TaskBud.Website.Extensions
+﻿@using TaskBud.Business.Extensions
+@using TaskBud.Business.Hubs
 @model TaskBud.Business.Models.Tasks.VMTaskIndex
 
 @{
@@ -9,16 +9,10 @@
 <div class="d-flex">
     <h3 class="flex-grow-1 flex-shrink-1 text-truncate">@ViewData["Title"]</h3>
     <div class="flex-shrink-0 flex-grow-0 mb-2">
-        <button type="button" class="btn btn-warning btn-sm mr-2"><i class="fa fa-fw fa-history"></i></button>
+        <a asp-action="Index" asp-controller="History" class="btn btn-warning btn-sm"><i class="fa fa-fw fa-history"></i></a>
         <a asp-action="Create" asp-route-taskGroupId="@Model.GroupId" class="btn btn-success btn-sm"><i class="fa fa-fw fa-plus-circle"></i></a>
     </div>
 </div>
-
-<template id="loading-bar-template">
-    <div class="swipe-bar d-inline-flex justify-content-center align-items-center w-100 mw-100 pt-1 pb-2">
-        <i class="fa fa-2x fa-hourglass"></i>
-    </div>
-</template>
 
 <div id="task-items">
     @for (var n = 0; n < Model.Tasks.Count; n++)
@@ -71,8 +65,6 @@
 
         if (dataLeft === "Complete") {
             onComplete(id, target);
-        } else if (dataLeft === "ReOpen") {
-            onReOpen(id, target);
         }
     }
 
@@ -81,13 +73,6 @@
         url = url.replace("@Guid.Empty", id);
 
         fetch(url, { method: 'POST'});
-    }
-
-    function onReOpen(id, target) {
-        var url = "@Url.Action("ReOpen", new { taskId = Guid.Empty })";
-        url = url.replace("@Guid.Empty", id);
-
-        fetch(url, { method: 'POST' });
     }
 
     function onSwipeRight(sender) {
