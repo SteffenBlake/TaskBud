@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskBud - @ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+</head>
+<body>
+<header class="sticky-top">
+    <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom mb-1 p-1">
+        <div class="container">
+            <button class="navbar-toggler pb-0 pt-0 pl-1 pr-1" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" asp-area="" asp-controller="Tasks" asp-action="Index" asp-route-taskGroupId="">TaskBud</a>
+
+            <div class="navbar-collapse collapse d-sm-inline-flex">
+                <ul class="navbar-nav flex-grow-1">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-dark dropdown-toggle" href="#" id="tasks-Dropdown" role="button" data-toggle="dropdown">
+                                Tasks
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="tasks-Dropdown">
+                                @await Component.InvokeAsync("TaskGroupList")
+                            </div>
+                        </li>
+
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link text-dark dropdown-toggle" href="#" id="admin-Dropdown" role="button" data-toggle="dropdown">
+                                    Admin
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="admin-Dropdown">
+                                    <a class="dropdown-item text-dark" asp-area="" asp-controller="Invitations" asp-action="Index">Invitations</a>
+                                </div>
+                            </li>
+                        }
+                    }
+                </ul>
+                <partial name="_LoginPartial" />
+            </div>
+        </div>
+    </nav>
+</header>
+<div class="container">
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+</div>
+
+<footer class="border-top text-muted" style="background-color: white">
+    <div class="container" style="line-height:21px">
+        <p class="mb-1">&copy; 2019 Steffen Cole Blake</p>
+        <p class="mb-0">Licensed under the MIT License. See license text <a href="https://www.mit.edu/~amini/LICENSE.md" target="_blank">here</a></p>
+    </div>
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jqueryui/jquery-ui.min.js"></script>
+<script src="~/lib/jqueryui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+<script src="~/js/swipeable.js" asp-append-version="true"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+@RenderSection("Scripts", required: false)
+</body>
+</html>
+
+<script>
+    // Automatic scrolling to inputs that are selected, makes mobile entry smoother
+    document.addEventListener("DOMContentLoaded", function () {
+        $("input").focus(() => smoothSlide(document.activeElement));
+        $("textarea").focus(() => smoothSlide(document.activeElement));
+        $(".collapse").on("show.bs.collapse", (e) => smoothSlide(e.currentTarget));
+    });
+
+    function smoothSlide(element) {
+        window.setTimeout(() => element.scrollIntoView({ block: "center", behavior: 'smooth' }), 400);
+    }
+</script>

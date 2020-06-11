@@ -1,0 +1,30 @@
+﻿@using TaskBud.Business.Models.Invitations
+
+@model VMInvitation
+
+    <tr data-id="@Model.Id">
+        <th>@Model.Id</th>
+        <th>@Model.State.ToString("G")</th>
+        <th class="d-flex justify-content-between">
+            @if (Model.State == InvitationState.Pending)
+            {
+                <input class="flex-fill mr-2" id="link-@Model.Id" type="text" readonly="readonly" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
+                <button type="button" data-target="link-@Model.Id" onclick="onCopy(this)" class="btn btn-primary" style="width: 55pt;">Copy</button>
+            }
+            else
+            {
+                <input class="flex-fill mr-2" type="text" readonly="readonly" disabled="disabled" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
+                <button type="button" class="btn btn-primary" disabled="disabled" style="width: 55pt;">Copy</button>
+            }
+        </th>
+        <th data-type="actions" data-target="@Model.Id">
+            @if (Model.State == InvitationState.Pending)
+            {
+                <button type="button" data-type="expire" class="btn btn-warning">Expire</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-warning" disabled="disabled">Expire</button>
+            }
+        </th>
+    </tr>

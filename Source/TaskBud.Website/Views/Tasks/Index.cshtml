@@ -1,0 +1,227 @@
+﻿@using TaskBud.Website.Hubs
+@using TaskBud.Website.Extensions
+@model TaskBud.Business.Models.Tasks.VMTaskIndex
+
+@{
+    ViewData["Title"] = "Tasks - " + Model.GroupTitle;
+}
+
+<div class="d-flex">
+    <h3 class="flex-grow-1 flex-shrink-1 text-truncate">@ViewData["Title"]</h3>
+    <div class="flex-shrink-0 flex-grow-0 mb-2">
+        <button type="button" class="btn btn-warning btn-sm mr-2"><i class="fa fa-fw fa-history"></i></button>
+        <a asp-action="Create" asp-route-taskGroupId="@Model.GroupId" class="btn btn-success btn-sm"><i class="fa fa-fw fa-plus-circle"></i></a>
+    </div>
+</div>
+
+<template id="loading-bar-template">
+    <div class="swipe-bar d-inline-flex justify-content-center align-items-center w-100 mw-100 pt-1 pb-2">
+        <i class="fa fa-2x fa-hourglass"></i>
+    </div>
+</template>
+
+<div id="task-items">
+    @for (var n = 0; n < Model.Tasks.Count; n++)
+    {
+        <partial name="_TaskItem" model="Model.Tasks[n]" />
+    }
+</div>
+
+<script src="~/js/signalr/signalr.min.js"></script>
+
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("@TaskHub.EndPoint").build();
+
+    document.addEventListener("DOMContentLoaded", onReady);
+
+    function onReady() {
+        enableSwiping(document);
+
+        connection.on("@TaskHub.Assigned", onAssigned);
+        connection.on("@TaskHub.UnAssigned", onUnAssigned);
+        connection.on("@TaskHub.Completed", onCompleted);
+        connection.on("@TaskHub.ReOpened", onReOpened);
+        connection.on("@TaskHub.Updated", onUpdated);
+        connection.on("@TaskHub.Created", onCreated);
+
+        connection.start();
+    }
+
+    function enableSwiping(element) {
+        $(element.querySelectorAll(".swipe-bar")).swipeable(
+            {
+                distance: 80,
+
+                left: onSwipeLeft,
+                leftMax: 0.35,
+                leftMinTrigger: 0.30,
+
+                right: onSwipeRight,
+                rightMax: 0.35,
+                rightMinTrigger: 0.30
+            }
+        );
+    }
+
+    function onSwipeLeft(sender) {
+        var id = sender.getAttribute("data-id");
+        var dataLeft = sender.getAttribute("data-left");
+        var targetId = sender.getAttribute("data-target");
+        var target = document.getElementById(targetId);
+
+        if (dataLeft === "Complete") {
+            onComplete(id, target);
+        } else if (dataLeft === "ReOpen") {
+            onReOpen(id, target);
+        }
+    }
+
+    function onComplete(id, target) {
+        var url = "@Url.Action("Complete", new { taskId = Guid.Empty })";
+        url = url.replace("@Guid.Empty", id);
+
+        fetch(url, { method: 'POST'});
+    }
+
+    function onReOpen(id, target) {
+        var url = "@Url.Action("ReOpen", new { taskId = Guid.Empty })";
+        url = url.replace("@Guid.Empty", id);
+
+        fetch(url, { method: 'POST' });
+    }
+
+    function onSwipeRight(sender) {
+        var id = sender.getAttribute("data-id");
+        var dataRight = sender.getAttribute("data-right");
+        var targetId = sender.getAttribute("data-target");
+        var target = document.getElementById(targetId);
+
+        if (dataRight === "Assign") {
+            onAssign(id, target);
+        } else if (dataRight === "UnAssign") {
+            onUnAssign(id, target);
+        }
+    }
+
+    function onAssign(id, target, userId) {
+        var url = "@Url.Action("Assign", new {taskId = Guid.Empty, userId = User.GetLoggedInUserId<string>()})";
+        url = url.replace("@Guid.Empty", id);
+
+        if (userId) {
+            url = url.replace("@(User.GetLoggedInUserId<string>())", userId);
+        }
+
+        fetch(url, { method: 'POST' });
+
+    }
+
+    function onUnAssign(id, target) {
+        var url = "@Url.Action("UnAssign", new { taskId = Guid.Empty })";
+        url = url.replace("@Guid.Empty", id);
+
+        fetch(url, { method: 'POST' });
+    }
+
+    function onAssigned(userId, taskId) {
+        if (userId === '@(User.GetLoggedInUserId<string>())') {
+            reloadTask(taskId);
+        } else {
+            removeTask(taskId);
+        }
+    }
+
+    function onUnAssigned(userId, taskId) {
+        if (userId === '@(User.GetLoggedInUserId<string>())') {
+            reloadTask(taskId);
+        } else {
+            loadTask(taskId);
+        }
+    }
+
+    function onCompleted(taskId) {
+        removeTask(taskId);
+    }
+
+    function onReOpened(userId, taskId) {
+        if (userId && userId !== '@(User.GetLoggedInUserId<string>())') {
+            return;
+        } else {
+            loadTask(taskId);
+        }
+    }
+
+    function onUpdated(taskId) {
+        reloadTask(taskId);
+    }
+
+    function onCreated(taskId) {
+        loadTask(taskId);
+    }
+
+    function reloadTask(taskId) {
+        removeTask(taskId);
+        loadTask(taskId);
+    }
+
+    function removeTask(taskId) {
+        var target = document.getElementById('task-' + taskId);
+        if (!target) {
+            return;
+        }
+        $(target).hide("slow", () => $(target).remove());
+    }
+
+    function loadTask(taskId) {
+        var url = "@(Url.Action("Read", new {taskId = Guid.Empty}))";
+        url = url.replace("@Guid.Empty", taskId);
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => insertTask(html));
+    }
+
+    function insertTask(html) {
+        var taskTemplate = document.createElement("template");
+        taskTemplate.innerHTML = html.trim();
+
+        var newTask = taskTemplate.content.firstElementChild;
+
+        var newAssigned = newTask.getAttribute("data-assigned");
+
+        if (newAssigned && newAssigned !== '@(User.GetLoggedInUserId<string>())') {
+            return;
+        }
+
+        var newPriority = newTask.getAttribute("data-priority");
+        var newDate = new Date(newTask.getAttribute("data-date"));
+
+        var tasks = document.getElementById("task-items");
+
+        for (var task = tasks.firstElementChild; task !== null; task = task.nextElementSibling) {
+            var priority = task.getAttribute("data-priority");
+            if (priority < newPriority) {
+                task.insertAdjacentHTML('beforebegin', html);
+                var target = task.previousElementSibling;
+                $(target).hide(0);
+                enableSwiping(target);
+                $(target).show("slow");
+                return;
+            }
+            var date = new Date(newTask.getAttribute("data-date"));
+            if (priority === newPriority && date < newDate) {
+                task.insertAdjacentHTML('beforebegin', html);
+                var target = task.previousElementSibling;
+                $(target).hide(0);
+                enableSwiping(target);
+                $(target).show("slow");
+                return;
+            }
+        }
+
+        tasks.lastElementChild.insertAdjacentHTML('afterend', html);
+        var target = tasks.lastElementChild;
+        $(target).hide(0);
+        enableSwiping(target);
+        $(target).show("slow");
+    }
+</script>

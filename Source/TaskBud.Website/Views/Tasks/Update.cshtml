@@ -1,0 +1,22 @@
+﻿@using TaskBud.Business.Services
+@model TaskBud.Business.Models.Tasks.VMTask
+
+@inject PriorityHelper PriorityHelper
+
+@{
+    ViewBag.Title = "Task - " + Model.Title;
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="Update" method="post">
+    
+    @Html.EditorForModel()
+
+    <div class="d-inline-flex justify-content-end w-100">
+        <button type="submit" class="btn btn-success mr-3">Update</button>
+        <a asp-action="Index" asp-route-taskGroupId="@Model.TaskGroupId" class="btn btn-secondary">Cancel</a>
+    </div>
+    <br />
+    <br />
+</form>

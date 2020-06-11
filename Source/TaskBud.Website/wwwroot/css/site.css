@@ -1,0 +1,82 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px; /* Vertically center the text there */
+}
+
+body, .container {
+    width: 100%;
+    min-height: 100%;
+}
+
+.swipe-container {
+    position: relative;
+    font-size: 14px;
+    overflow: hidden;
+}
+
+.swipe-labels {
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.swipe-left {
+    height: 100%;
+    flex-grow: 1;
+    text-align: left;
+    color: white;
+    padding-left: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.swipe-right {
+    height: 100%;
+    flex-grow: 1;
+    text-align: right;
+    color: white;
+    padding-right: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.swipe-bar {
+    height: 100%;
+    background-color: white;
+    border-top: 1px lightgray groove;
+    border-bottom: 1px lightgray groove;
+    overflow: hidden;
+}
+
+.swipe-bar.unassigned {
+    background-color: mintcream;
+}
+
+.swipe-bar.dragging {
+    -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+    -moz-box-shadow: 3px 3px 5px 6px #ccc;
+    box-shadow: 3px 3px 5px 6px #ccc;
+}
+
+.swipe-bar > i {
+    height: 100%;
+    vertical-align: middle;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.swipe-bar > .swipe-text {
+    flex-grow: 1;
+    text-align: center;
+}

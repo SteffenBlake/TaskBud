@@ -1,0 +1,44 @@
+﻿@using TaskBud.Business.Data
+@using TaskBud.Business.Services
+@using TaskBud.Website.Extensions
+@using Microsoft.AspNetCore.Identity
+@model TaskBud.Business.Models.Tasks.VMTask
+
+@inject PriorityHelper PriorityHelper
+@inject TaskGroupManager TaskGroupManager
+@inject UserManager<IdentityUser> UserManager
+
+<input type="hidden" asp-for="Id" />
+
+<div class="form-group">
+    <label asp-for="Title"></label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="Description"></label>
+    <textarea asp-for="Description" class="form-control"></textarea>
+    <span asp-validation-for="Description" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="Priority"></label>
+    <select asp-for="Priority" class="form-control" asp-items="Html.GetEnumSelectList<TaskPriority>()">
+    </select>
+    <span asp-validation-for="Priority" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="TaskGroupId"></label>
+    <select asp-for="TaskGroupId" class="form-control" asp-items="(await TaskGroupManager.IndexAsync()).SelectList(m => m.Id, m => m.Title)">
+    </select>
+    <span asp-validation-for="TaskGroupId" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="AssignedUserId"></label>
+    <select asp-for="AssignedUserId" class="form-control" asp-items="UserManager.Users.SelectList(m => m.Id, m => m.UserName)">
+    </select>
+    <span asp-validation-for="AssignedUserId" class="text-danger"></span>
+</div>

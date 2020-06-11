@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "font-awesome@5.12.0-2",
+      "destination": "wwwroot/lib/font-awesome/"
+    },
+    {
+      "library": "jqueryui-touch-punch@0.2.3",
+      "destination": "wwwroot/jqueryui-touch-punch/"
+    },
+    {
+      "library": "jqueryui@1.12.1",
+      "destination": "wwwroot/jqueryui/"
+    },
+    {
+      "provider": "unpkg",
+      "library": "@microsoft/signalr@3.1.5",
+      "destination": "wwwroot/js/signalr/"
+    }
+  ]
+}

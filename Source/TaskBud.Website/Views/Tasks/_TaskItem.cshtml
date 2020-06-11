@@ -1,0 +1,62 @@
+﻿@using Markdig
+@using TaskBud.Business.Services
+@using TaskBud.Website.Extensions
+@model TaskBud.Business.Models.Tasks.VMTask
+
+@inject MarkdownPipeline MarkdownPipeline
+@inject PriorityHelper PriorityHelper
+
+@{
+    var assignedClass = Model.IsAssigned ? "assigned" : "unassigned";
+    var descriptionClass = Model.IsAssigned ? "text-muted" : "font-weight-bold";
+    var dataRight = Model.IsAssigned ? "UnAssign" : "Assign";
+    var dataLeft = Model.Complete ? "ReOpen" : "Complete";
+}
+
+<div id="task-@Model.Id" data-assigned="@Model.AssignedUserId" data-priority="@((int)Model.Priority)" data-date="@Model.CreationDate.ToString("O")">
+    <div class="swipe-container">
+        <div class="swipe-labels">
+            @if (Model.IsAssigned)
+            {
+                <div class="swipe-left" style="background:darkred"><i class="fa fa-3x fa-undo"></i></div>
+            }
+            else
+            {
+                <div class="swipe-left" style="background:orange"><i class="fa fa-3x fa-clipboard-list"></i></div>
+            }
+
+            @if (Model.Complete)
+            {
+                <div class="swipe-right" style="background:darkred"><i class="fa fa-3x fa-times-circle"></i></div>
+            }
+            else
+            {
+                <div class="swipe-right" style="background:darkgreen"><i class="fa fa-3x fa-check-circle"></i></div>
+            }
+        </div>
+        <div class="swipe-bar d-inline-flex justify-content-start align-items-center w-100 mw-100 @assignedClass" data-target="task-@Model.Id" data-left="@dataLeft" data-right="@dataRight" data-id="@Model.Id">
+            <i style="text-align:center;width:10%;color:@PriorityHelper.ColorFor(Model.Priority)" class="flex-shrink-0 fa @PriorityHelper.IconFor(Model.Priority)"></i>
+            <div class="d-flex flex-column justify-content-start flex-grow-1 flex-shrink-1 pt-1 pb-2 pr-2" style="min-width:0" role="button" data-toggle="collapse" data-target="#collapse-@Model.Id">
+                <div class="d-inline-flex justify-content-between">
+                    <span class="font-weight-bold text-secondary text-truncate flex-shrink-1 pr-2" style="min-width:0">@Model.Title</span>
+                    <span class="font-weight-bold text-primary flex-shrink-0">@Model.CreationDate.ToHumanReadable()</span>
+                </div>
+                <div class="d-inline-flex justify-content-between">
+                    <span class="swipe-text text-truncate @descriptionClass flex-shrink-1">@Markdown.ToPlainText(Model.Description ?? "N/A", MarkdownPipeline)</span>
+                    <span class="font-weight-bold flex-shrink-0">@(Model.CreatedBy)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="collapse-@Model.Id" class="collapse" data-parent="#task-items">
+        <div class="card-body">
+            <div class="d-inline-flex justify-content-between align-items-baseline w-100">
+                <span>Assignee: @(Model.AssignedUser ?? "None")</span>
+                <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-warning"><i class="fa fa-edit"></i></a>
+            </div>
+            <hr/>
+            @Html.Raw(Markdown.ToHtml(Model.Description ?? " ", MarkdownPipeline))
+        </div>
+    </div>
+</div>

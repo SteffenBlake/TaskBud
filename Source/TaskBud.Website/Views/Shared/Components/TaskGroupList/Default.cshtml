@@ -1,0 +1,13 @@
+﻿@model System.Collections.Generic.IList<TaskBud.Business.Models.TaskGroups.VMTaskGroup>
+
+<a class="dropdown-item text-dark" asp-area="" asp-controller="Tasks" asp-action="Index" asp-route-taskGroupId="">All</a>
+
+@foreach (var taskGroup in Model)
+{
+    <a class="dropdown-item text-dark" asp-area="" asp-controller="Tasks" asp-action="Index" asp-route-taskGroupId="@taskGroup.Id">@taskGroup.Title</a>
+}
+
+@if (User.IsInRole("Administrator"))
+{
+    <a asp-controller="TaskGroups" asp-action="New" class="dropdown-item text-dark"><i class="fa fa-fw fa-plus-circle"></i>Create New</a>
+}
