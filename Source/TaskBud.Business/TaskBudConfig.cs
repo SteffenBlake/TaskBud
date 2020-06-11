@@ -5,7 +5,7 @@ namespace TaskBud.Business
 {
     public class TaskBudConfig
     {
-        public ConnectionType ConnectionType { get; set; }
+        public ConnectionType? ConnectionType { get; set; } = Business.ConnectionType.INVALID;
         public string ConnectionString { get; set; }
         public TaskBudIdentityConfig Identity { get; set; }
         public InvitationsConfig Invitations { get; set; }
@@ -24,6 +24,7 @@ namespace TaskBud.Business
     public enum ConnectionType
     {
         MSSQL,
-        POSTGRES
+        POSTGRES,
+        INVALID
     }
 }

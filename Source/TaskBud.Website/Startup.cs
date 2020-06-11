@@ -28,6 +28,19 @@ namespace TaskBud.Website
         public void ConfigureServices(IServiceCollection services)
         {
             var config = Configuration.Get<TaskBudConfig>();
+
+            if (config.ConnectionType == ConnectionType.INVALID)
+            {
+                Console.Error.WriteLine("Please specify a valid ConnectionType in your AppSettings");
+                Environment.Exit(1);
+            }
+
+            if (string.IsNullOrEmpty(config.ConnectionString.Trim()))
+            {
+                Console.Error.WriteLine("Please specify a valid ConnectionString in your AppSettings");
+                Environment.Exit(1);
+            }
+
             services.AddSingleton(config);
 
             services.AddLogging();
