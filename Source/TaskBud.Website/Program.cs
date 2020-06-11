@@ -14,7 +14,7 @@ namespace TaskBud.Website
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls("https://0.0.0.0:5001", "https://192.168.0.17:5000").UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
                 });
     }
 }
