@@ -47,8 +47,10 @@ namespace TaskBud.Business.Services
             return await ReadAsync(user, entity.Id);
         }
 
-        public async Task<VMTaskIndex> IndexAsync(ClaimsPrincipal user, string userId, string taskGroupId = null)
+        public async Task<VMTaskIndex> IndexAsync(ClaimsPrincipal user, string taskGroupId = null)
         {
+            var userId = user.GetLoggedInUserId<string>();
+
             var data = new VMTaskIndex();
 
             var tasks = VMTask.Fetch(DBContext.TaskItems);
