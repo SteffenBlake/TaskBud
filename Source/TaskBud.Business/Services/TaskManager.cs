@@ -29,12 +29,10 @@ namespace TaskBud.Business.Services
 
         public async Task<VMTask> CreateAsync(ClaimsPrincipal user, VMTask data)
         {
-            var userTask = UserManager.FindUserAsync(user);
-
             var entity = new TaskItem();
             await data.WriteAsync(DBContext, entity);
 
-            entity.Creator = await userTask;
+            entity.CreatorId = user.GetLoggedInUserId<string>();
             entity.CreationDate = DateTimeOffset.Now;
 
             await DBContext.TaskItems.AddAsync(entity);
