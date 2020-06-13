@@ -11,6 +11,7 @@ using TaskBud.Business;
 using TaskBud.Business.Services;
 using System.Threading;
 using Markdig;
+using Microsoft.Extensions.Logging;
 using TaskBud.Business.Hubs;
 
 namespace TaskBud.Website
@@ -84,11 +85,16 @@ namespace TaskBud.Website
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+
             // Auto migrate EFCore Database
             using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
+                var config = serviceScope.ServiceProvider.GetRequiredService<TaskBudConfig>();
+
+                loggerFactory.AddFile(config.Logging.Path, config.Logging.MinimumLevel);
+
                 var migrator = serviceScope.ServiceProvider.GetRequiredService<DBMigrator>();
                 using (var cancellation = new CancellationTokenSource())
                 {
