@@ -69,3 +69,6 @@ Thats all!
 - [ ] Add support for Azure Web Service hosting with Azure Key Vault Storage
 - [ ] Maybe add support for attaching images to issues? If people really want that.
 - [ ] Add support for push notifications while open, opt in(?)
+- [ ] Add configuration and support for SSL Signing / HTTPS
+- [ ] Add a "Wait until" property to Tasks
+- [ ] Add a "Automatic Repeat" functionality to Tasks
