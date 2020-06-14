@@ -1,30 +1,55 @@
 ﻿@using TaskBud.Business.Models.Invitations
+@using TaskBud.Business.Extensions
 
 @model VMInvitation
 
-    <tr data-id="@Model.Id">
-        <th>@Model.Id</th>
-        <th>@Model.State.ToString("G")</th>
-        <th class="d-flex justify-content-between">
-            @if (Model.State == InvitationState.Pending)
-            {
-                <input class="flex-fill mr-2" id="link-@Model.Id" type="text" readonly="readonly" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
-                <button type="button" data-target="link-@Model.Id" onclick="onCopy(this)" class="btn btn-primary" style="width: 55pt;">Copy</button>
-            }
-            else
-            {
-                <input class="flex-fill mr-2" type="text" readonly="readonly" disabled="disabled" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
-                <button type="button" class="btn btn-primary" disabled="disabled" style="width: 55pt;">Copy</button>
-            }
-        </th>
-        <th data-type="actions" data-target="@Model.Id">
+@{
+    var color = Model.State switch 
+    {
+        InvitationState.Accepted => "darkgreen",
+        InvitationState.Expired => "darkred",
+        InvitationState.Pending => "darkorange"
+    };
+}
+
+
+<div class="card" data-id="@Model.Id">
+    <div class="card-header d-inline-flex justify-content-between align-items-center" id="headingOne">
+        <span class="text-primary text-truncate flex-grow-1 flex-shrink-1" type="button" data-toggle="collapse" data-target="#invitation-collapse-@Model.Id">
+            @Model.Id
+        </span>
+
+        <div data-type="actions" data-target="@Model.Id" class="flex-grow-0 flex-shrink-0">
             @if (Model.State == InvitationState.Pending)
             {
                 <button type="button" data-type="expire" class="btn btn-warning">Expire</button>
             }
             else
             {
-                <button type="button" class="btn btn-warning" disabled="disabled">Expire</button>
+                <button type="button" class="btn btn-warning" disabled="disabled">Expired</button>
             }
-        </th>
-    </tr>
+        </div>
+    </div>
+
+    <div id="invitation-collapse-@Model.Id" class="collapse" data-parent="#invitation-grid-body">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-1">
+                <div>
+                    Status: <span style="color: @color">@Model.State.GetDisplayName()</span>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between">
+                @if (Model.State == InvitationState.Pending)
+                {
+                    <input class="flex-fill mr-2" id="link-@Model.Id" type="text" readonly="readonly" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
+                    <button type="button" data-target="link-@Model.Id" onclick="onCopy(this)" class="btn btn-primary" style="width: 70pt;">Copy</button>
+                }
+                else
+                {
+                    <input class="flex-fill mr-2" type="text" readonly="readonly" disabled="disabled" value="@Url.PageLink("/Account/Register", null, new {Area = "Identity", code = Model.Id})" />
+                    <button type="button" class="btn btn-primary" disabled="disabled" style="width: 70pt;">Copy</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>

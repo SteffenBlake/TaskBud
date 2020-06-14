@@ -6,7 +6,7 @@
     ViewData["Title"] = "Invitations";
 }
 
-<div class="w-100 d-inline-flex justify-content-end align-items-end">
+<div class="w-100 d-inline-flex justify-content-end align-items-end pb-1">
     <h1 class="flex-grow-1 flex-shrink-1">Invitations</h1>
     <div class="">
         @if (Model.ShowHidden)
@@ -21,24 +21,13 @@
     </div>
 </div>
 
-<br />
+<div class="accordion" id="invitation-grid-body">
+    @for (var n = 0; n < Model.Invitations.Count(); n++)
+    {
+        @Html.DisplayFor(m => m.Invitations[n])
+    }
+</div>
 
-<table class="table table-striped table-bordered table-hover">
-    <thead class="thead-dark">
-        <tr>
-            <th>Id</th>
-            <th>Status</th>
-            <th>Invitation Link</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="invitation-grid-body">
-        @for (var n = 0; n < Model.Invitations.Count(); n++)
-        {
-            @Html.DisplayFor(m => m.Invitations[n])
-        }
-    </tbody>
-</table>
 
 <script>
     window.addEventListener('DOMContentLoaded', onLoad);
@@ -103,4 +92,4 @@
 
         sender.innerHTML = "Copied!";
     }
-</script>
+    </script>
