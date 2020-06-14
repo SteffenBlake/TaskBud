@@ -19,9 +19,9 @@ namespace TaskBud.Website.Controllers
         // GET: ~/invitations/index
         [HttpGet("")]
         [HttpGet("index")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool showHidden = false)
         {
-            var vm = await InvitationManager.IndexAsync();
+            var vm = await InvitationManager.IndexAsync(showHidden);
             return View(vm);
         }
 

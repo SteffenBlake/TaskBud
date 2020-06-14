@@ -48,15 +48,17 @@ namespace TaskBud.Business.Services
         }
 
 
-        public Task<VMInvitationIndex> IndexAsync()
+        public Task<VMInvitationIndex> IndexAsync(bool showHidden = false)
         {
             var invitations = DbContext.InvitationCodes
+                .Where(m => showHidden || m.Expiration == null || DateTime.Now < m.Expiration)
                 .Select(VMInvitation.Read(DbContext))
                 .ToList();
 
             var data = new VMInvitationIndex
             {
-                Invitations = invitations
+                Invitations = invitations,
+                ShowHidden = showHidden
             };
 
             return Task.FromResult(data);

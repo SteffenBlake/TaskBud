@@ -6,13 +6,22 @@
     ViewData["Title"] = "Invitations";
 }
 
-
-<div class="w-100 d-flex flex-row justify-content-between">
-    <h1>Invitations</h1>
-    <button id="add-new-btn"type="button" class="btn btn-success"><i class="fa fa-fw fa-plus-circle"></i>Add new...</button>
+<div class="w-100 d-inline-flex justify-content-end align-items-end">
+    <h1 class="flex-grow-1 flex-shrink-1">Invitations</h1>
+    <div class="">
+        @if (Model.ShowHidden)
+        {
+            <a asp-action="Index" asp-route-showHidden="false" class="btn btn-sm btn-warning flex-grow-0 flex-shrink-0"><i class="fa fa-fw fa-eye"></i></a>
+        }
+        else
+        {
+            <a asp-action="Index" asp-route-showHidden="true" class="btn btn-sm btn-warning flex-grow-0 flex-shrink-0"><i class="fa fa-fw fa-eye-slash"></i></a>
+        }
+        <button id="add-new-btn" type="button" class="btn btn-sm btn-success flex-grow-0 flex-shrink-0"><i class="fa fa-fw fa-plus-circle"></i></button>
+    </div>
 </div>
 
-<br/>
+<br />
 
 <table class="table table-striped table-bordered table-hover">
     <thead class="thead-dark">
@@ -24,7 +33,7 @@
         </tr>
     </thead>
     <tbody id="invitation-grid-body">
-        @for(var n = 0; n < Model.Invitations.Count(); n++)
+        @for (var n = 0; n < Model.Invitations.Count(); n++)
         {
             @Html.DisplayFor(m => m.Invitations[n])
         }
