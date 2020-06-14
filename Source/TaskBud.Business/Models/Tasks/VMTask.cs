@@ -24,6 +24,7 @@ namespace TaskBud.Business.Models.Tasks
         public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
         [ReadOnly(true)]
+        [Display(Name = "Created")]
         public DateTimeOffset CreationDate { get; set; }
 
         [ReadOnly(true)]
@@ -44,6 +45,17 @@ namespace TaskBud.Business.Models.Tasks
 
         [Required]
         public string TaskGroupId { get; set; }
+
+
+        [Display(Name = "Wait Until")]
+        public DateTimeOffset? WaitUntil { get; set; }
+
+        [Display(Name = "Repeat After")]
+        public int? RepeatAfterCount { get; set; }
+
+        [Required]
+        [Display(Name = "Repeat After")]
+        public RepeatType RepeatAfterType { get; set; } = RepeatType.Days;
 
         public static IQueryable<TaskItem> Fetch(DbSet<TaskItem> models)
         {
@@ -66,17 +78,23 @@ namespace TaskBud.Business.Models.Tasks
                 AssignedUser = model.AssignedUser != null ? model.AssignedUser.UserName : null,
                 AssignedUserId = model.AssignedUserId,
                 CreatedBy = model.Creator.UserName,
-                TaskGroupId = model.Group.Id
+                TaskGroupId = model.Group.Id,
+                WaitUntil = model.WaitUntil,
+                RepeatAfterCount = model.RepeatAfterCount,
+                RepeatAfterType = model.RepeatAfterType,
             };
         }
 
-        public async Task WriteAsync(TaskBudDbContext dbContext, TaskItem model)
+        public void Write(TaskBudDbContext dbContext, TaskItem model)
         {
             model.Title = Title;
             model.Description = Description;
             model.Priority = Priority;
-            model.Group = await dbContext.TaskGroups.FindAsync(TaskGroupId);
+            model.GroupId = TaskGroupId;
             model.AssignedUserId = AssignedUserId;
+            model.WaitUntil = WaitUntil;
+            model.RepeatAfterCount = RepeatAfterCount;
+            model.RepeatAfterType = RepeatAfterType;
         }
     }
 }

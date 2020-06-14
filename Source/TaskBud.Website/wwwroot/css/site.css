@@ -26,15 +26,18 @@ body, .container {
     display: inline-flex;
     flex-direction: row;
     justify-content: center;
+    align-items: stretch;
     position: absolute;
     top: 0;
     right: 0;
 }
 
 .swipe-left {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
     height: 100%;
     flex-grow: 1;
-    text-align: left;
     color: white;
     padding-left: 15px;
     padding-top: 5px;
@@ -42,9 +45,12 @@ body, .container {
 }
 
 .swipe-right {
+    display: flex;
     height: 100%;
     flex-grow: 1;
-    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     color: white;
     padding-right: 15px;
     padding-top: 5px;

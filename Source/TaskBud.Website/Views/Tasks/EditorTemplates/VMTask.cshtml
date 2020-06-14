@@ -30,6 +30,24 @@
 </div>
 
 <div class="form-group">
+    <label asp-for="WaitUntil"></label>
+    <input asp-for="WaitUntil" class="form-control" />
+    <span asp-validation-for="WaitUntil" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="RepeatAfterType"></label>
+    <div class="d-flex justify-content-around">
+        <input asp-for="RepeatAfterCount" class="form-control" />
+        <select asp-for="RepeatAfterType" class="form-control" asp-items="Html.GetEnumSelectList<RepeatType>()">
+        </select>
+    </div>
+
+    <span asp-validation-for="RepeatAfterType" class="text-danger"></span>
+</div>
+
+
+<div class="form-group">
     <label asp-for="TaskGroupId"></label>
     <select asp-for="TaskGroupId" class="form-control" asp-items="(await TaskGroupManager.IndexAsync()).SelectList(m => m.Id, m => m.Title)">
     </select>
@@ -42,3 +60,12 @@
     </select>
     <span asp-validation-for="AssignedUserId" class="text-danger"></span>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", onReady);
+
+    function onReady() {
+        $("#@(nameof(Model.WaitUntil))").datepicker();
+    }
+
+</script>

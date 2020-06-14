@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskBud.Business.Data
 {
@@ -27,6 +28,12 @@ namespace TaskBud.Business.Data
 
         public DateTimeOffset? CompletionDate { get; set; }
 
+        public DateTimeOffset? WaitUntil { get; set; }
+
+        public int? RepeatAfterCount { get; set; }
+
+        [Required]
+        public RepeatType RepeatAfterType { get; set; } = RepeatType.Days;
 
         [Required]
         public string GroupId { get; set; }

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace TaskBud.Website.Extensions
+namespace TaskBud.Business.Extensions
 {
     public static class DateTimeOffsetExtensions
     {

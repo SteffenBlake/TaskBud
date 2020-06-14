@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TaskBud.Business.Data;
@@ -15,22 +14,20 @@ namespace TaskBud.Business.Services
     public class TaskManager
     {
         private TaskBudDbContext DBContext { get; }
-        private UserManager<IdentityUser> UserManager { get; }
         private IHubContext<TaskHub> TaskHubContext { get; }
         private HistoryManager HistoryManager { get; }
 
-        public TaskManager(TaskBudDbContext dbContext, UserManager<IdentityUser> userManager, IHubContext<TaskHub> taskHubContext, HistoryManager historyManager)
+        public TaskManager(TaskBudDbContext dbContext, IHubContext<TaskHub> taskHubContext, HistoryManager historyManager)
         {
             DBContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            UserManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             TaskHubContext = taskHubContext ?? throw new ArgumentNullException(nameof(taskHubContext));
             HistoryManager = historyManager;
         }
 
         public async Task<VMTask> CreateAsync(ClaimsPrincipal user, VMTask data)
         {
-            var entity = new TaskItem();
-            await data.WriteAsync(DBContext, entity);
+            var entity = new TaskItem(); 
+            data.Write(DBContext, entity);
 
             entity.CreatorId = user.GetLoggedInUserId<string>();
             entity.CreationDate = DateTimeOffset.Now;
@@ -67,7 +64,8 @@ namespace TaskBud.Business.Services
 
             tasks = tasks
                 .Where(t => t.AssignedUserId == null || t.AssignedUserId == userId)
-                .Where(t => t.CompletionDate == null);
+                .Where(t => t.CompletionDate == null)
+                .Where(t => t.WaitUntil == null || DateTime.Now > t.WaitUntil);
 
             tasks = tasks.OrderByDescending(t => t.Priority);
 
@@ -90,6 +88,13 @@ namespace TaskBud.Business.Services
                 VMTask.Fetch(DBContext.TaskItems)
                 .SingleAsync(m => m.Id == data.Id);
 
+            // To keep tracking simple, we revert RepeatAfterType back to "Days" if the count is left blank
+            // This way, changing the "RepeatAfterType" property and leaving "Count" blank wont trigger events
+            if (data.RepeatAfterCount == null)
+            {
+                data.RepeatAfterType = RepeatType.Days;
+            }
+
             if (entity.AssignedUserId != data.AssignedUserId)
             {
                 await HistoryManager.AssignedAsync(user, data.Id, entity.AssignedUserId, data.AssignedUserId);
@@ -110,7 +115,17 @@ namespace TaskBud.Business.Services
                 await HistoryManager.DescriptionChangeAsync(user, data.Id, entity.Description, data.Description);
             }
 
-            await data.WriteAsync(DBContext, entity);
+            if (entity.WaitUntil != data.WaitUntil)
+            {
+                await HistoryManager.WaitUntilChangeAsync(user, data.Id, entity.WaitUntil, data.WaitUntil);
+            }
+                              
+            if (entity.RepeatAfterCount != data.RepeatAfterCount || entity.RepeatAfterType != data.RepeatAfterType)
+            {
+                await HistoryManager.RepeatAfterChangeAsync(user, data.Id, (entity.RepeatAfterCount, entity.RepeatAfterType), (data.RepeatAfterCount, data.RepeatAfterType));
+            }
+
+            data.Write(DBContext, entity);
 
             DBContext.Update(entity);
 
@@ -130,10 +145,34 @@ namespace TaskBud.Business.Services
             await DBContext.SaveChangesAsync();
 
             await HistoryManager.CompletedAsync(user, taskId);
-
             await TaskHubContext.Clients.All.SendAsync(TaskHub.Completed, taskId);
 
-            return await ReadAsync(user, entity.Id);
+            var readData = await ReadAsync(user, entity.Id);
+
+            if (entity.RepeatAfterCount != null)
+            {
+                var newTask = new TaskItem();
+                readData.Write(DBContext, newTask);
+                newTask.Id = Guid.NewGuid().ToString();
+                newTask.CreationDate = DateTimeOffset.Now;
+                newTask.CompletionDate = null;
+                newTask.WaitUntil = entity.RepeatAfterType switch
+                {
+                    RepeatType.Minutes => DateTimeOffset.Now.AddMinutes(entity.RepeatAfterCount.Value),
+                    RepeatType.Hours => DateTimeOffset.Now.AddHours(entity.RepeatAfterCount.Value),
+                    RepeatType.Days => DateTimeOffset.Now.AddDays(entity.RepeatAfterCount.Value),
+                    RepeatType.Weeks => DateTimeOffset.Now.AddDays(entity.RepeatAfterCount.Value * 7),
+                    RepeatType.Months => DateTimeOffset.Now.AddMonths(entity.RepeatAfterCount.Value),
+                    RepeatType.Years => DateTimeOffset.Now.AddYears(entity.RepeatAfterCount.Value),
+                    _ => throw new ArgumentOutOfRangeException(nameof(entity.RepeatAfterType))
+                };
+
+                await DBContext.TaskItems.AddAsync(newTask);
+                await DBContext.SaveChangesAsync();
+            }
+
+
+            return readData;
         }
 
         public async Task<VMTask> Assign(ClaimsPrincipal user, string taskId, string userId)
