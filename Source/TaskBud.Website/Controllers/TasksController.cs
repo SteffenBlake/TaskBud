@@ -76,7 +76,7 @@ namespace TaskBud.Website.Controllers
             {
                 await TaskManager.UpdateAsync(User, writeData);
 
-                return RedirectToAction("Index", new { GroupId = writeData.TaskGroupId });
+                return RedirectToAction("Index", new { writeData.TaskGroupId });
             }
             else
             {
