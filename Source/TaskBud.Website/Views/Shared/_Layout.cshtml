@@ -10,6 +10,17 @@
     <link rel="stylesheet" href="~/lib/jqueryui/themes/flick/jquery-ui.css" type="text/css"/>
 </head>
 <body>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jqueryui/jquery-ui.min.js"></script>
+<script src="~/lib/jqueryui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+<script src="~/js/swipeable.js" asp-append-version="true"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/cronstrue/cronstrue.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+
+@RenderSection("Scripts", required: false)
+
 <header class="sticky-top">
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom mb-1 p-1">
         <div class="container">
@@ -63,15 +74,6 @@
         <p class="mb-0">Licensed under the MIT License. See license text <a href="https://www.mit.edu/~amini/LICENSE.md" target="_blank">here</a></p>
     </div>
 </footer>
-
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/jqueryui/jquery-ui.min.js"></script>
-<script src="~/lib/jqueryui-touch-punch/jquery.ui.touch-punch.min.js"></script>
-<script src="~/js/swipeable.js" asp-append-version="true"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-
-@RenderSection("Scripts", required: false)
 </body>
 </html>
 

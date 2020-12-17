@@ -30,10 +30,10 @@ namespace TaskBud.Business.Data
 
         public DateTimeOffset? WaitUntil { get; set; }
 
-        public int? RepeatAfterCount { get; set; }
+        public string RepeatCron { get; set; }
 
-        [Required]
-        public RepeatType RepeatAfterType { get; set; } = RepeatType.Days;
+        public string StartingAssignedUserId { get; set; }
+        public IdentityUser StartingAssignedUser { get; set; }
 
         [Required]
         public string GroupId { get; set; }

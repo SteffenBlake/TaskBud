@@ -36,16 +36,17 @@
 </div>
 
 <div class="form-group">
-    <label asp-for="RepeatAfterType"></label>
-    <div class="d-flex justify-content-around">
-        <input asp-for="RepeatAfterCount" class="form-control" />
-        <select asp-for="RepeatAfterType" class="form-control" asp-items="Html.GetEnumSelectList<RepeatType>()">
-        </select>
-    </div>
-
-    <span asp-validation-for="RepeatAfterType" class="text-danger"></span>
+    <label asp-for="RepeatCron"></label>
+    @Html.EditorFor(m => m.RepeatCron, new { onChange = "setTimeout(showHideStartAssignee,1000)" })
+    <span asp-validation-for="RepeatCron" class="text-danger"></span>
 </div>
 
+<div class="form-group">
+    <label asp-for="StartingAssignedUserId"></label>
+    <select asp-for="StartingAssignedUserId" class="form-control" asp-items="UserManager.Users.SelectList(m => m.Id, m => m.UserName)">
+    </select>
+    <span asp-validation-for="StartingAssignedUserId" class="text-danger"></span>
+</div>
 
 <div class="form-group">
     <label asp-for="TaskGroupId"></label>
@@ -65,7 +66,17 @@
     document.addEventListener("DOMContentLoaded", onReady);
 
     function onReady() {
-        $("#@(nameof(Model.WaitUntil))").datepicker();
+        $("#@(nameof(Model.WaitUntil))").datepicker({ dateFormat: "yy-mm-dd" });
+        showHideStartAssignee();
+    }
+
+    function showHideStartAssignee() {
+        const target = $("#@(nameof(Model.StartingAssignedUserId))").parent();
+        if ($("[name='@(nameof(Model.RepeatCron))']").val()) {
+            target.show(750);
+        } else {
+            target.hide(750);
+        }
     }
 
 </script>

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Cronos;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TaskBud.Business.Data;
@@ -88,13 +89,6 @@ namespace TaskBud.Business.Services
                 VMTask.Fetch(DBContext.TaskItems)
                 .SingleAsync(m => m.Id == data.Id);
 
-            // To keep tracking simple, we revert RepeatAfterType back to "Days" if the count is left blank
-            // This way, changing the "RepeatAfterType" property and leaving "Count" blank wont trigger events
-            if (data.RepeatAfterCount == null)
-            {
-                data.RepeatAfterType = RepeatType.Days;
-            }
-
             if (entity.AssignedUserId != data.AssignedUserId)
             {
                 await HistoryManager.AssignedAsync(user, data.Id, entity.AssignedUserId, data.AssignedUserId);
@@ -120,9 +114,14 @@ namespace TaskBud.Business.Services
                 await HistoryManager.WaitUntilChangeAsync(user, data.Id, entity.WaitUntil, data.WaitUntil);
             }
                               
-            if (entity.RepeatAfterCount != data.RepeatAfterCount || entity.RepeatAfterType != data.RepeatAfterType)
+            if (entity.RepeatCron != data.RepeatCron)
             {
-                await HistoryManager.RepeatAfterChangeAsync(user, data.Id, (entity.RepeatAfterCount, entity.RepeatAfterType), (data.RepeatAfterCount, data.RepeatAfterType));
+                await HistoryManager.RepeatAfterChangeAsync(user, data.Id, entity.RepeatCron, data.RepeatCron);
+            }
+
+            if (entity.StartingAssignedUserId != data.StartingAssignedUserId)
+            {
+                await HistoryManager.StarterAssigneeChangeAsync(user, data.Id, entity.StartingAssignedUserId, data.StartingAssignedUserId);
             }
 
             data.Write(DBContext, entity);
@@ -139,38 +138,27 @@ namespace TaskBud.Business.Services
         public async Task<VMTask> Complete(ClaimsPrincipal user, string taskId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
-            entity.CompletionDate = DateTimeOffset.Now;
+
+            // Because Cronos cannot provide a "LastOccurrence" we need to execute the HistoryManager first
+            await HistoryManager.CompletedAsync(user, taskId);
+
+            if (!string.IsNullOrEmpty(entity.RepeatCron))
+            {
+                var next = CronExpression.Parse(entity.RepeatCron).GetNextOccurrence(DateTime.UtcNow) ?? throw new Exception("Cronos broke, investigate why?");
+                var nextLocal = new DateTime(next.Ticks, DateTimeKind.Local);
+                entity.WaitUntil = new DateTimeOffset(nextLocal);
+                entity.AssignedUserId = entity.StartingAssignedUserId;
+            }
+            else
+            {
+                entity.CompletionDate = DateTimeOffset.Now;
+            }
 
             DBContext.Update(entity);
             await DBContext.SaveChangesAsync();
 
-            await HistoryManager.CompletedAsync(user, taskId);
             await TaskHubContext.Clients.All.SendAsync(TaskHub.Completed, taskId);
-
             var readData = await ReadAsync(user, entity.Id);
-
-            if (entity.RepeatAfterCount != null)
-            {
-                var newTask = new TaskItem();
-                readData.Write(DBContext, newTask);
-                newTask.Id = Guid.NewGuid().ToString();
-                newTask.CreationDate = DateTimeOffset.Now;
-                newTask.CompletionDate = null;
-                newTask.WaitUntil = entity.RepeatAfterType switch
-                {
-                    RepeatType.Minutes => DateTimeOffset.Now.AddMinutes(entity.RepeatAfterCount.Value),
-                    RepeatType.Hours => DateTimeOffset.Now.AddHours(entity.RepeatAfterCount.Value),
-                    RepeatType.Days => DateTimeOffset.Now.AddDays(entity.RepeatAfterCount.Value),
-                    RepeatType.Weeks => DateTimeOffset.Now.AddDays(entity.RepeatAfterCount.Value * 7),
-                    RepeatType.Months => DateTimeOffset.Now.AddMonths(entity.RepeatAfterCount.Value),
-                    RepeatType.Years => DateTimeOffset.Now.AddYears(entity.RepeatAfterCount.Value),
-                    _ => throw new ArgumentOutOfRangeException(nameof(entity.RepeatAfterType))
-                };
-
-                await DBContext.TaskItems.AddAsync(newTask);
-                await DBContext.SaveChangesAsync();
-            }
-
 
             return readData;
         }

@@ -27,5 +27,9 @@ namespace TaskBud.Business.Data
 
         [Display(Name = "Repeat After")]
         RepeatAfterChange,
+
+
+        [Display(Name = "Starter Assignee")]
+        StarterAssignee,
     }
 }

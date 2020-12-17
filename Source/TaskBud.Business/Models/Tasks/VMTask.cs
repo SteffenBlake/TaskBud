@@ -33,6 +33,7 @@ namespace TaskBud.Business.Models.Tasks
 
         [Display(Name = "Assignee")]
         public string AssignedUser { get; set; }
+        [Display(Name = "Assignee")]
         public string AssignedUserId { get; set; }
 
         [ReadOnly(true)]
@@ -44,18 +45,26 @@ namespace TaskBud.Business.Models.Tasks
         public bool Complete => CompletionDate.HasValue;
 
         [Required]
+        [Display(Name = "Task Group")]
         public string TaskGroupId { get; set; }
 
 
         [Display(Name = "Wait Until")]
+        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTimeOffset? WaitUntil { get; set; }
 
-        [Display(Name = "Repeat After")]
-        public int? RepeatAfterCount { get; set; }
+        [Display(Name = "Repeat:")]
+        [UIHint("CronString")]
+        public string RepeatCron { get; set; }
 
-        [Required]
-        [Display(Name = "Repeat After")]
-        public RepeatType RepeatAfterType { get; set; } = RepeatType.Days;
+        [Display(Name = "Starting Assignee")]
+        public string StartingAssignedUser { get; set; }
+
+        [Display(Name = "Starting Assignee")]
+        public string StartingAssignedUserId { get; set; }
+
+        [ReadOnly(true)]
+        public bool HasStarterAssigned => StartingAssignedUserId != null;
 
         public static IQueryable<TaskItem> Fetch(DbSet<TaskItem> models)
         {
@@ -80,8 +89,9 @@ namespace TaskBud.Business.Models.Tasks
                 CreatedBy = model.Creator.UserName,
                 TaskGroupId = model.Group.Id,
                 WaitUntil = model.WaitUntil,
-                RepeatAfterCount = model.RepeatAfterCount,
-                RepeatAfterType = model.RepeatAfterType,
+                RepeatCron = model.RepeatCron,
+                StartingAssignedUser = model.StartingAssignedUser != null ? model.StartingAssignedUser.UserName : null,
+                StartingAssignedUserId = model.StartingAssignedUserId,
             };
         }
 
@@ -93,8 +103,8 @@ namespace TaskBud.Business.Models.Tasks
             model.GroupId = TaskGroupId;
             model.AssignedUserId = AssignedUserId;
             model.WaitUntil = WaitUntil;
-            model.RepeatAfterCount = RepeatAfterCount;
-            model.RepeatAfterType = RepeatAfterType;
+            model.RepeatCron = RepeatCron;
+            model.StartingAssignedUserId = StartingAssignedUserId;
         }
     }
 }

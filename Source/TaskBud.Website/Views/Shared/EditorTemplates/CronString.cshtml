@@ -1,0 +1,414 @@
+﻿@model string
+
+@{
+    var uid = "i" + Guid.NewGuid();
+}
+
+
+<input asp-for="@Model" type="hidden" value="@Model" id="@uid-output-raw" />
+
+<div class="d-inline-flex w-100">
+    <div class="form-group w-100 mr-auto">
+        <input id="@uid-output-readable" class="form-control" readonly />
+    </div>
+    <div class="form-group ml-1">
+        <button type="button" id="@uid-edit-btn" class="btn btn-warning"><i class="fa fa-edit"></i></button>
+    </div>
+</div>
+
+<div class="modal fade" id="@uid-editor" tabindex="-1" role="dialog" aria-labelledby="@uid-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@uid-label">Cron Editor</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group w-100">
+                    <input type="text" id="@uid-input-readable" class="w-100 form-control" readonly/>
+                    <input type="hidden" value="@Model" id="@uid-input-raw"/>
+                </div>
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="@uid-cron-time-tab" data-toggle="tab" href="#@uid-cron-time" aria-controls="@uid-cron-time" aria-selected="true">
+                            Time(s)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="@uid-cron-days-of-week-tab" data-toggle="tab" href="#@uid-cron-days-of-week" aria-controls="@uid-cron-days-of-week" aria-selected="false">
+                            Day(s) of Week
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="@uid-cron-day-of-month-tab" data-toggle="tab" href="#@uid-cron-day-of-month" aria-controls="@uid-cron-day-of-month" aria-selected="false">
+                            Day(s) of Month
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="@uid-cron-month-tab" data-toggle="tab" href="#@uid-cron-month" aria-controls="@uid-cron-month" aria-selected="false">
+                            Month(s)
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="@uid-cron-tab-content">
+                    <div class="tab-pane fade show active" id="@uid-cron-time" role="tabpanel" aria-labelledby="@uid-cron-time-tab">
+                        <div class="form-group">
+                            <select required="required" id="@uid-cron-time-select" class="form-control w-100">
+                                @foreach (var type in new (int val, string name)[] {(0, "AM"), (12, "PM")})
+                                {
+                                    @for (var hour = 1; hour <= 12; hour++)
+                                    {
+                                        @for (var minute = 0; minute <= 45; minute += 15)
+                                        {
+                                            var text = $"{hour}:{minute:D2} {type.name}";
+                                            var trueHour = hour + type.val;
+
+                                            <option data-hour="@trueHour" data-minute="@minute" data-raw="@text">@text</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="@uid-cron-days-of-week" role="tabpanel" aria-labelledby="@uid-cron-days-of-week-tab">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-all" class="custom-control-input" value="*"/>
+                                <label for="@uid-cron-days-of-week-all" class="custom-control-label">All</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-sun" class="custom-control-input" value="0"/>
+                                <label for="@uid-cron-days-of-week-sun" class="custom-control-label">Sunday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-mon" class="custom-control-input" value="1"/>
+                                <label for="@uid-cron-days-of-week-mon" class="custom-control-label">Monday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-tue" class="custom-control-input" value="2"/>
+                                <label for="@uid-cron-days-of-week-tue" class="custom-control-label">Tuesday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-wed" class="custom-control-input" value="3"/>
+                                <label for="@uid-cron-days-of-week-wed" class="custom-control-label">Wednesday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-thu" class="custom-control-input" value="4"/>
+                                <label for="@uid-cron-days-of-week-thu" class="custom-control-label">Thursday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-fri" class="custom-control-input" value="5"/>
+                                <label for="@uid-cron-days-of-week-fri" class="custom-control-label">Friday</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-days-of-week-sat" class="custom-control-input" value="6"/>
+                                <label for="@uid-cron-days-of-week-sat" class="custom-control-label">Saturday</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="@uid-cron-day-of-month" role="tabpanel">
+                        <div class="form-group">
+                            <div id="@uid-cron-day-of-month-picker" class="w-100"></div>
+                        </div>
+                        <div class="form-group">
+                            <ul id="@uid-cron-day-of-month-list" class="list-group w-100">
+                                <li id="@uid-cron-day-of-month-list-any" value="*" class="list-group-item">Any</li>
+                            </ul>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="@uid-cron-day-of-month-add-btn" class="btn btn-success float-right">Add date</button>
+                            <button type="button" id="@uid-cron-day-of-month-clear-btn" class="btn btn-danger float-right">Clear List</button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="@uid-cron-month" role="tabpanel" aria-labelledby="@uid-cron-month-tab">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-all" class="custom-control-input" value="*"/>
+                                <label for="@uid-cron-month-all" class="custom-control-label">All</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-jan" class="custom-control-input" value="1"/>
+                                <label for="@uid-cron-month-jan" class="custom-control-label">January</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-feb" class="custom-control-input" value="2"/>
+                                <label for="@uid-cron-month-feb" class="custom-control-label">February</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-mar" class="custom-control-input" value="3"/>
+                                <label for="@uid-cron-month-mar" class="custom-control-label">March</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-apr" class="custom-control-input" value="4"/>
+                                <label for="@uid-cron-month-apr" class="custom-control-label">April</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-may" class="custom-control-input" value="5"/>
+                                <label for="@uid-cron-month-may" class="custom-control-label">May</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-jun" class="custom-control-input" value="6"/>
+                                <label for="@uid-cron-month-jun" class="custom-control-label">June</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-jul" class="custom-control-input" value="7"/>
+                                <label for="@uid-cron-month-jul" class="custom-control-label">July</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-aug" class="custom-control-input" value="8"/>
+                                <label for="@uid-cron-month-aug" class="custom-control-label">August</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-sept" class="custom-control-input" value="9"/>
+                                <label for="@uid-cron-month-sept" class="custom-control-label">September</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-oct" class="custom-control-input" value="10"/>
+                                <label for="@uid-cron-month-oct" class="custom-control-label">October</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-nov" class="custom-control-input" value="11"/>
+                                <label for="@uid-cron-month-nov" class="custom-control-label">November</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" id="@uid-cron-month-dec" class="custom-control-input" value="12"/>
+                                <label for="@uid-cron-month-dec" class="custom-control-label">December</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="@uid-clear-btn">Clear</button>
+                <button type="button" class="btn btn-primary" id="@uid-save-changes-btn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(window) {
+
+        function updateOutput() {
+            update('@uid-output-raw', '@uid-output-readable');
+        }
+
+        function updateInput() {
+            update('@uid-input-raw', '@uid-input-readable');
+        }
+
+        function updateRaw() {
+            const timeSelect = $('#@uid-cron-time-select');
+            const timeVal = timeSelect.val();
+            const selector = '[data-raw="' + timeVal + '"]';
+            const selectedTime = timeSelect.children(selector);
+            const minute = selectedTime.attr("data-minute");
+            const hour = selectedTime.attr("data-hour");
+
+            let daysOfWeek = '*';
+            if (!$('#@uid-cron-days-of-week-all').is(':checked')) {
+                daysOfWeek = $("#@uid-cron-days-of-week input:checked")
+                .map(function () {
+                    return this.value;
+                })
+                .get()
+                .join();
+            }
+
+            let months = '*';
+            if (!$('#@uid-cron-month-all').is(':checked')) {
+                months = $("#@uid-cron-month input:checked")
+                    .map(function() {
+                        return this.value;
+                    })
+                    .get()
+                    .join();
+            }
+
+            let daysOfMonth = '*';
+            if (!$('#@uid-cron-day-of-month-list-any').length) {
+                daysOfMonth = $("#@uid-cron-day-of-month-list>li")
+                    .map(function() {
+                        return this.value;
+                    })
+                    .get()
+                    .join();
+            }
+
+            const cronString = minute + " " + hour + " " + daysOfMonth + " " + months + " " + daysOfWeek;
+
+            document.getElementById('@uid-input-raw').value = cronString;
+
+            updateInput();
+        }
+
+        function update(sourceId, targetId) {
+            const source = document.getElementById(sourceId);
+            const target = document.getElementById(targetId);
+            if (source.value) {
+                try {
+                    const humanReadableStr = window.cronstrue.toString(source.value);
+                    target.value = humanReadableStr;
+                    return;
+                } catch (e) { }
+            }
+            source.value = "";
+            target.value = "Never";
+        }
+
+        function onEdit() {
+            $('#@uid-editor').modal('show');
+        }
+
+        function onSaveChanges() {
+            document.getElementById('@uid-output-raw').value = document.getElementById('@uid-input-raw').value;
+            updateOutput();
+
+            $('#@uid-editor').modal('hide');
+
+            @ViewData["onChange"] ;
+        }
+
+        function onClear() {
+            $('#@uid-input-raw').val('');
+            updateInput();
+            onSaveChanges();
+            loadInputs();
+        }
+
+        function onCheckboxSelected(e) {
+            recalcCheckboxes($(e.target));
+            updateRaw();
+        }
+
+        function recalcCheckboxes(target) {
+            if (target.val() === '*') {
+                const siblings = target.parent().parent().find("input[type='checkbox']:not([value='*'])");
+                siblings.prop('checked', target.is(":checked"));
+
+            } else if (!target.is(":checked")) {
+                target.parent().parent().find("input[value='*']").prop('checked', false);
+            }
+        }
+
+        function onDayOfMonthSelected() {
+            const day = $("#@uid-cron-day-of-month-picker").datepicker("getDate").getDate();
+            addDayOfMonth(day);
+            updateRaw();
+        }
+
+        function addDayOfMonth(number) {
+            const list = document.getElementById('@uid-cron-day-of-month-list');
+            if (list.querySelector("li[data-val='" + number + "']")) {
+                return;
+            }
+
+            $('#@uid-cron-day-of-month-list-any').remove();
+
+            const child = document.createElement("li");
+            child.innerText = number;
+            child.setAttribute("value", number);
+            child.setAttribute("class", "list-group-item");
+            list.appendChild(child);
+        }
+
+        function onClearDaysOfMonths() {
+            clearDaysOfMonths();
+            updateRaw();
+        }
+
+        function clearDaysOfMonths() {
+            const list = document.getElementById('@uid-cron-day-of-month-list');
+            list.textContent = '';
+
+            const child = document.createElement("li");
+            child.innerText = "Any";
+            child.setAttribute("value", '*');
+            child.setAttribute("id", '@uid-cron-day-of-month-list-any');
+            child.setAttribute("class", "list-group-item");
+            list.appendChild(child);
+        }
+
+        function loadInputs() {
+            const cronString = $('#@uid-output-raw').val();
+            if (cronString) {
+                const items = cronString.split(' ');
+                const minutes = items[0];
+                const hours = items[1];
+                const daysOfMonth = items[2];
+                const months = items[3];
+                const daysOfWeek = items[4];
+
+                const timeSelect = $("#@uid-cron-time-select");
+                const selectedTime = timeSelect.children(`option[data-minute="${minutes}"][data-hour="${hours}"]`).val();
+                timeSelect.val(selectedTime);
+
+                if (daysOfMonth !== '*') {
+                    daysOfMonth.split(',').forEach(addDayOfMonth);
+                }
+
+                if (months === '*') {
+                    const target = $('#@uid-cron-month-all');
+                    target.prop('checked', true);
+                    recalcCheckboxes(target);
+                } else {
+                    const container = $("#@uid-cron-month");
+                    months.split(',').forEach(month => {
+                        container.find(`input[value="${month}"]`).prop('checked', true);
+                    });
+                }
+
+                if (daysOfWeek === '*') {
+                    const target = $('#@uid-cron-days-of-week-all');
+                    target.prop('checked', true);
+                    recalcCheckboxes(target);
+                } else {
+                    const container = $("#@uid-cron-days-of-week");
+                    daysOfWeek.split(',').forEach(dayOfWeek => {
+                        container.find(`input[value="${dayOfWeek}"]`).prop('checked', true);
+                    });
+                }
+            } else {
+                clearDaysOfMonths();
+                $("#@uid-cron-month").find('input').prop('checked', false);
+                $("#@uid-cron-days-of-week").find('input').prop('checked', false);
+            }
+        }
+
+        function onReady() {
+            document.getElementById('@uid-cron-day-of-month-add-btn').addEventListener('click', onDayOfMonthSelected);
+            document.getElementById('@uid-cron-day-of-month-clear-btn').addEventListener('click', onClearDaysOfMonths);
+            document.getElementById('@uid-edit-btn').addEventListener('click', onEdit);
+            document.getElementById('@uid-save-changes-btn').addEventListener('click', onSaveChanges);
+            document.getElementById('@uid-clear-btn').addEventListener('click', onClear);
+            document.getElementById('@uid-cron-time-select').addEventListener('change', updateRaw);
+
+            loadInputs();
+            updateRaw();
+            updateOutput();
+            updateInput();
+
+            $("#@uid-editor input[type='checkbox']").change(onCheckboxSelected);
+
+            $("#@uid-cron-day-of-month-picker").datepicker({
+                "changeYear": false,
+                "changeMonth": false,
+                "showButtonPanel": false,
+                minDate: new Date(2021, 7, 1),
+                maxDate: new Date(2021, 7, 31),
+            });
+        }
+
+        $(window.document).ready(onReady);
+
+    }(window));
+</script>
+
+<style>
+    #@uid-cron-day-of-month-picker .ui-datepicker-header, #@uid-cron-day-of-month-picker thead {
+        display: none
+    }
+</style>

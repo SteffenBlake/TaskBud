@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Cronos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using TaskBud.Business.Data;
@@ -63,19 +63,15 @@ namespace TaskBud.Business.Services
 
             (history.Action switch
             {
-                TaskAction.Completed => () => task.CompletionDate = null,
+                TaskAction.Completed => () => UndoComplete(task, history.OldValueRaw),
                 TaskAction.Assigned => () => task.AssignedUserId = history.OldValueRaw,
                 TaskAction.TitleChange => () => task.Title = history.OldValueRaw,
                 TaskAction.DescriptionChange => () => task.Description = history.OldValueRaw,
                 TaskAction.PriorityChange => () => task.Priority = Enum.Parse<TaskPriority>(history.OldValueRaw),
                 TaskAction.Created => () => throw new NotImplementedException(),
                 TaskAction.WaitUntilChange => () => task.WaitUntil = string.IsNullOrEmpty(history.OldValueRaw) ? (DateTimeOffset?)null : DateTimeOffset.Parse(history.OldValueRaw),
-                TaskAction.RepeatAfterChange => () =>
-                {
-                    var data = JsonSerializer.Deserialize<RepeatContainer>(history.OldValueRaw);
-                    task.RepeatAfterCount = data.RepeatAfterCount;
-                    task.RepeatAfterType = data.RepeatAfterType;
-                },
+                TaskAction.RepeatAfterChange => () => task.RepeatCron = history.OldValueRaw,
+                TaskAction.StarterAssignee => () => task.StartingAssignedUserId = history.OldValueRaw,
 
                 _ => (Action)(() => throw new ArgumentOutOfRangeException(nameof(history.Action)))
             })();
@@ -108,7 +104,13 @@ namespace TaskBud.Business.Services
 
                 TaskAction.WaitUntilChange => TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId),
 
-                TaskAction.RepeatAfterChange => TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId),
+                TaskAction.RepeatAfterChange => 
+                    // Only bother sending the signal if "Repeating" <-> "Not Repeating"
+                    (string.IsNullOrEmpty(history.OldValueRaw) != string.IsNullOrEmpty(history.NewValueRaw)) ?
+                    TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId) :
+                    Task.CompletedTask,
+
+                TaskAction.StarterAssignee => Task.CompletedTask,
 
                 _ => Task.FromException(new ArgumentOutOfRangeException(nameof(history.Action)))
             });
@@ -130,22 +132,15 @@ namespace TaskBud.Business.Services
 
             (history.Action switch
             {
-                TaskAction.Completed => () => task.CompletionDate = DateTimeOffset.Now,
+                TaskAction.Completed => () => RedoComplete(task, history.NewValueRaw),
                 TaskAction.Assigned => () => task.AssignedUserId = history.NewValueRaw,
                 TaskAction.TitleChange => () => task.Title = history.NewValueRaw,
                 TaskAction.DescriptionChange => () => task.Description = history.NewValueRaw,
                 TaskAction.PriorityChange => () => task.Priority = Enum.Parse<TaskPriority>(history.NewValueRaw),
                 TaskAction.Created => () => throw new NotImplementedException(),
                 TaskAction.WaitUntilChange => () => task.WaitUntil = string.IsNullOrEmpty(history.NewValueRaw) ? (DateTimeOffset?)null : DateTimeOffset.Parse(history.NewValueRaw),
-
-                TaskAction.RepeatAfterChange => () =>
-                {
-
-                    var data = JsonSerializer.Deserialize<RepeatContainer>(history.OldValueRaw);
-                    task.RepeatAfterCount = data.RepeatAfterCount;
-                    task.RepeatAfterType = data.RepeatAfterType;
-                },
-
+                TaskAction.RepeatAfterChange => () => task.RepeatCron = history.NewValueRaw,
+                TaskAction.StarterAssignee => () => task.StartingAssignedUserId = history.NewValueRaw,
                 _ => (Action)(() => throw new ArgumentOutOfRangeException(nameof(history.Action)))
             })();
 
@@ -177,8 +172,13 @@ namespace TaskBud.Business.Services
 
                 TaskAction.WaitUntilChange => TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId),
 
-                TaskAction.RepeatAfterChange => TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId),
+                TaskAction.RepeatAfterChange => 
+                    // Only bother sending the signal if "Repeating" <-> "Not Repeating"
+                    (string.IsNullOrEmpty(history.OldValueRaw) != string.IsNullOrEmpty(history.NewValueRaw)) ?
+                    TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, history.TaskId) :
+                    Task.CompletedTask,
 
+                TaskAction.StarterAssignee => Task.CompletedTask,
 
                 _ => Task.FromException(new ArgumentOutOfRangeException(nameof(history.Action)))
             });
@@ -186,8 +186,62 @@ namespace TaskBud.Business.Services
             return Read(user, historyId);
         }
 
+        private static void UndoComplete(TaskItem task, string oldValueRaw)
+        {
+            if (string.IsNullOrEmpty(task.RepeatCron))
+            {
+                task.CompletionDate = null;
+            }
+            else
+            {
+                var oldData = JsonSerializer.Deserialize<CompletedTaskRepeatData>(oldValueRaw);
+                task.AssignedUserId = oldData.AssignedUserId;
+                task.WaitUntil = oldData.WaitUntil;
+            }
+        }
+
+        private static void RedoComplete(TaskItem task, string newValueRaw)
+        {
+            if (string.IsNullOrEmpty(task.RepeatCron))
+            {
+                task.CompletionDate = DateTimeOffset.Now;
+            }
+            else
+            {
+                var newData = JsonSerializer.Deserialize<CompletedTaskRepeatData>(newValueRaw);
+                task.AssignedUserId = newData.AssignedUserId;
+                task.WaitUntil = newData.WaitUntil;
+            }
+        }
+
         public async Task CompletedAsync(ClaimsPrincipal user, string taskId)
         {
+            var oldValueRaw = "Incomplete";
+            var newValueRaw = "Complete";
+
+            var task = await DBContext.FindAsync<TaskItem>(taskId);
+
+            if (!string.IsNullOrEmpty(task.RepeatCron))
+            {
+                var oldData = new CompletedTaskRepeatData
+                {
+                    AssignedUserId = task.AssignedUserId,
+                    WaitUntil = task.WaitUntil,
+                };
+                oldValueRaw = JsonSerializer.Serialize(oldData);
+
+                var next = CronExpression.Parse(task.RepeatCron).GetNextOccurrence(DateTime.UtcNow) ?? throw new Exception("Cronos broke, investigate why?");
+                var nextLocal = new DateTime(next.Ticks, DateTimeKind.Local);
+
+                var newData = new CompletedTaskRepeatData
+                {
+                    AssignedUserId = task.StartingAssignedUserId,
+                    WaitUntil = nextLocal,
+                };
+                newValueRaw = JsonSerializer.Serialize(newData);
+
+            }
+
             var history = new TaskHistory
             {
                 UserId = user.GetLoggedInUserId<string>(),
@@ -197,19 +251,13 @@ namespace TaskBud.Business.Services
                 IsUndone = false,
                 CanUndo = true,
                 CanRedo = true,
-                OldValueRaw = "Incomplete",
+                OldValueRaw = oldValueRaw,
                 OldValue = "Incomplete",
-                NewValueRaw = "Complete",
+                NewValueRaw = newValueRaw,
                 NewValue = "Complete",
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.Completed && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach(var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.Completed);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
@@ -235,13 +283,7 @@ namespace TaskBud.Business.Services
                 NewValue = newUser?.UserName ?? "None"
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.Assigned && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach (var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.Assigned);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
@@ -264,13 +306,7 @@ namespace TaskBud.Business.Services
                 NewValue = newTitle
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.TitleChange && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach (var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.TitleChange);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
@@ -293,13 +329,7 @@ namespace TaskBud.Business.Services
                 NewValue = newDescription
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.DescriptionChange && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach (var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.DescriptionChange);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
@@ -322,13 +352,7 @@ namespace TaskBud.Business.Services
                 NewValue = newPriority.GetDisplayName()
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.PriorityChange && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach (var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.PriorityChange);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
@@ -372,19 +396,13 @@ namespace TaskBud.Business.Services
                 NewValue = newWaitUntil?.ToHumanReadable()
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.WaitUntilChange && m.TaskId == taskId && m.CanRedo).ToList();
-            foreach (var oldHistory in oldHistories)
-            {
-                oldHistory.CanUndo = false;
-                oldHistory.CanRedo = false;
-                DBContext.Update(oldHistory);
-            }
+            ResetOldHistories(taskId, TaskAction.WaitUntilChange);
 
             await DBContext.TaskHistory.AddAsync(history);
             await DBContext.SaveChangesAsync();
         }
 
-        public async Task RepeatAfterChangeAsync(ClaimsPrincipal user, string taskId, (int? Count, RepeatType Type) oldRepeat, (int? Count, RepeatType Type) newRepeat)
+        public async Task RepeatAfterChangeAsync(ClaimsPrincipal user, string taskId, string oldRepeatCron, string newRepeatCron)
         {
             var history = new TaskHistory
             {
@@ -395,36 +413,60 @@ namespace TaskBud.Business.Services
                 IsUndone = false,
                 CanUndo = true,
                 CanRedo = true,
-                OldValueRaw = JsonSerializer.Serialize(new RepeatContainer(oldRepeat.Count, oldRepeat.Type)),
-                OldValue = $"{oldRepeat.Count} {oldRepeat.Type.GetDisplayName()}",
-                NewValueRaw = JsonSerializer.Serialize(new RepeatContainer(newRepeat.Count, newRepeat.Type)),
-                NewValue = $"{newRepeat.Count} {newRepeat.Type.GetDisplayName()}"
+                OldValueRaw = oldRepeatCron,
+                OldValue = string.IsNullOrEmpty(oldRepeatCron) ? "" : CronExpressionDescriptor.ExpressionDescriptor.GetDescription(oldRepeatCron),
+                NewValueRaw = newRepeatCron,
+                NewValue = string.IsNullOrEmpty(newRepeatCron) ? "" : CronExpressionDescriptor.ExpressionDescriptor.GetDescription(newRepeatCron),
             };
 
-            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == TaskAction.RepeatAfterChange && m.TaskId == taskId && m.CanRedo).ToList();
+            ResetOldHistories(taskId, TaskAction.RepeatAfterChange);
+            await DBContext.TaskHistory.AddAsync(history);
+            await DBContext.SaveChangesAsync();
+        }
+
+
+        public async Task StarterAssigneeChangeAsync(ClaimsPrincipal user, string taskId, string oldUserId, string newUserId)
+        {
+            var oldUser = string.IsNullOrEmpty(oldUserId) ? null : await UserManager.FindByIdAsync(oldUserId);
+            var newUser = string.IsNullOrEmpty(newUserId) ? null : await UserManager.FindByIdAsync(newUserId);
+
+            var history = new TaskHistory
+            {
+                UserId = user.GetLoggedInUserId<string>(),
+                TaskId = taskId,
+                CreatedOn = DateTimeOffset.Now,
+                Action = TaskAction.StarterAssignee,
+                IsUndone = false,
+                CanUndo = true,
+                CanRedo = true,
+                OldValueRaw = oldUserId,
+                OldValue = oldUser?.UserName ?? "None",
+                NewValueRaw = newUserId,
+                NewValue = newUser?.UserName ?? "None"
+            };
+
+            ResetOldHistories(taskId, TaskAction.StarterAssignee);
+
+            await DBContext.TaskHistory.AddAsync(history);
+            await DBContext.SaveChangesAsync();
+        }
+
+        private void ResetOldHistories(string taskId, TaskAction actionType)
+        {
+            var oldHistories = DBContext.TaskHistory.Where(m => m.Action == actionType && m.TaskId == taskId && m.CanRedo).ToList();
             foreach (var oldHistory in oldHistories)
             {
                 oldHistory.CanUndo = false;
                 oldHistory.CanRedo = false;
                 DBContext.Update(oldHistory);
             }
-
-            await DBContext.TaskHistory.AddAsync(history);
-            await DBContext.SaveChangesAsync();
         }
 
-        public class RepeatContainer
+        public class CompletedTaskRepeatData
         {
-            public RepeatContainer() {}
-
-            public RepeatContainer(int? repeatAfterCount, RepeatType repeatAfterType)
-            {
-                RepeatAfterCount = repeatAfterCount;
-                RepeatAfterType = repeatAfterType;
-            }
-
-            public int? RepeatAfterCount { get; set; }
-            public RepeatType RepeatAfterType { get; set; }
+            public string AssignedUserId { get; set; }
+            public DateTimeOffset? WaitUntil { get; set; }
         }
+
     }
 }

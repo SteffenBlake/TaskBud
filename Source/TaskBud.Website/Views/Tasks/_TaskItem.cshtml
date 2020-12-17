@@ -36,7 +36,7 @@
                 </div>
                 <div class="d-inline-flex justify-content-between">
                     <span class="font-weight-bold text-secondary text-truncate flex-shrink-1 pr-2" style="min-width:0">@Model.Title</span>
-                    <span class="font-weight-bold text-warning flex-shrink-0">@(Model.RepeatAfterCount.HasValue ? "Repeating" : "")</span>
+                    <span class="font-weight-bold text-warning flex-shrink-0">@(string.IsNullOrEmpty(Model.RepeatCron) ? "" : "Repeating")</span>
                 </div>
                 <div class="d-inline-flex justify-content-between">
                     <span class="swipe-text text-truncate @descriptionClass flex-shrink-1">@Markdown.ToPlainText(Model.Description ?? "N/A", MarkdownPipeline)</span>
