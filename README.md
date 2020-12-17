@@ -70,5 +70,10 @@ Thats all!
 - [ ] Maybe add support for attaching images to issues? If people really want that.
 - [ ] Add support for push notifications while open, opt in(?)
 - [ ] Add configuration and support for SSL Signing / HTTPS
-- [ ] Add a "Wait until" property to Tasks
-- [ ] Add a "Automatic Repeat" functionality to Tasks
+- [x] Add a "Wait until" property to Tasks
+- [x] Add a "Automatic Repeat" functionality to Tasks
+- [ ] Expose usable API for IoT stuff / IFTTT / Home Assistants
+- [ ] Setup wiki and document better
+- [ ] Make some "how to use" youtube videos
+...
+- [x] Acknowledge the irony of a To-Do list on the README for your To-Do list app...

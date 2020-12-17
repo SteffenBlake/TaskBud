@@ -1,4 +1,4 @@
-$version = "1.0.2"
+$version = "1.0.3"
 
 $platforms = @("linux-arm", "linux-x64", "osx-x64", "win-arm", "win-x64", "win-x86" )
 
