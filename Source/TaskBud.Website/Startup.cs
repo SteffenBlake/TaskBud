@@ -96,10 +96,7 @@ namespace TaskBud.Website
                 loggerFactory.AddFile(config.Logging.Path, config.Logging.MinimumLevel);
 
                 var migrator = serviceScope.ServiceProvider.GetRequiredService<DBMigrator>();
-                using (var cancellation = new CancellationTokenSource())
-                {
-                    migrator.ExecuteAsync(cancellation.Token).Wait();
-                }
+                migrator.ExecuteAsync().Wait();
             }
 
             if (env.IsDevelopment())

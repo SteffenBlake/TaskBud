@@ -4,11 +4,12 @@
 @model VMInvitation
 
 @{
-    var color = Model.State switch 
+    var color = Model.State switch
     {
         InvitationState.Accepted => "darkgreen",
         InvitationState.Expired => "darkred",
-        InvitationState.Pending => "darkorange"
+        InvitationState.Pending => "darkorange",
+        _ => throw new ArgumentOutOfRangeException(nameof(Model.State))
     };
 }
 

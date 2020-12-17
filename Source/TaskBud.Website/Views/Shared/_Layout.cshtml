@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="~/css/site.css" type="text/css"/>
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" type="text/css"/>
     <link rel="stylesheet" href="~/lib/jqueryui/themes/flick/jquery-ui.css" type="text/css"/>
-
 </head>
 <body>
 <header class="sticky-top">
@@ -41,12 +40,13 @@
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="admin-Dropdown">
                                     <a class="dropdown-item text-dark" asp-area="" asp-controller="Invitations" asp-action="Index">Invitations</a>
+                                    <a class="dropdown-item text-dark" asp-area="" asp-controller="Users" asp-action="Index">Users</a>
                                 </div>
                             </li>
                         }
                     }
                 </ul>
-                <partial name="_LoginPartial" />
+                <partial name="_LoginPartial"/>
             </div>
         </div>
     </nav>
@@ -58,7 +58,7 @@
 </div>
 
 <footer class="border-top text-muted" style="background-color: white">
-    <div class="container" style="line-height:21px">
+    <div class="container" style="line-height: 21px">
         <p class="mb-1">&copy; 2019 Steffen Cole Blake</p>
         <p class="mb-0">Licensed under the MIT License. See license text <a href="https://www.mit.edu/~amini/LICENSE.md" target="_blank">here</a></p>
     </div>

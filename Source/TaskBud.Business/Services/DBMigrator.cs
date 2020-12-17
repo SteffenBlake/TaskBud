@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using TaskBud.Business.Data;
 
@@ -22,44 +22,61 @@ namespace TaskBud.Business.Services
             RoleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
         }
 
-        public async Task ExecuteAsync(CancellationToken cancellationToken)
+        public async Task ExecuteAsync()
         {
-            await DbContext.Database.MigrateAsync(cancellationToken);
+            await DbContext.Database.MigrateAsync();
 
-            _ = await TryAddAdminUserRole(cancellationToken);
-            _ = await TryAddAdminUser(cancellationToken);
+            var adminRole = await TryCreateRoleAsync("Administrator");
+            _ = await TryCreateRoleAsync("User");
+            _ = await TryCreateUserAsync("Admin", adminRole.Name);
 
-            await DbContext.SaveChangesAsync(cancellationToken);
+            await TryAssignUsersAsync();
+
+            await DbContext.SaveChangesAsync();
         }
 
-        private async Task<IdentityRole> TryAddAdminUserRole(CancellationToken cancellationToken)
+        private async Task<IdentityRole> TryCreateRoleAsync(string roleName)
         {
-            var admin = await RoleManager.FindByNameAsync("Administrator");
+            var role = await RoleManager.FindByNameAsync(roleName);
 
-            if (admin == null)
+            if (role != null) 
+                return role;
+
+            role = new IdentityRole(roleName);
+            _ = await RoleManager.CreateAsync(role);
+
+            return role;
+        }
+
+        private async Task<IdentityUser> TryCreateUserAsync(string userName, string roleName)
+        {
+            var admin = await UserManager.FindByNameAsync(userName);
+            if (admin != null) 
+                return admin;
+
+            admin = new IdentityUser(userName)
             {
-                admin = new IdentityRole("Administrator");
-                _ = await RoleManager.CreateAsync(admin);
-            }
+                Email = $"{userName}@{userName}.{userName}",
+                EmailConfirmed = true,
+            };
+            _ = await UserManager.CreateAsync(admin, userName);
+            _ = await UserManager.AddToRoleAsync(admin, roleName);
 
             return admin;
         }
 
-        private async Task<IdentityUser> TryAddAdminUser(CancellationToken cancellationToken)
+        // New role "User" may have pre-existing users not assigned to any role that need assigning to it
+        private async Task TryAssignUsersAsync()
         {
-            var admin = await UserManager.FindByNameAsync("Admin");
-            if (admin == null)
+            foreach (var user in UserManager.Users.ToList())
             {
-                admin = new IdentityUser("Admin")
-                {
-                    Email = "admin@admin.admin",
-                    EmailConfirmed = true,
-                };
-                _ = await UserManager.CreateAsync(admin, "admin");
-                _ = await UserManager.AddToRoleAsync(admin, "Administrator");
-            }
+                var roles = await UserManager.GetRolesAsync(user);
+                if (roles.Any())
+                    // User had a role
+                    continue;
 
-            return admin;
+                _ = await UserManager.AddToRoleAsync(user, "User");
+            }
         }
     }
 }

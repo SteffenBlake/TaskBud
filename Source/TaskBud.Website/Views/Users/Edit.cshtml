@@ -1,0 +1,27 @@
+﻿@model Microsoft.AspNetCore.Identity.IdentityUser
+
+@{
+    ViewBag.Title = $"Manage User - {Model.UserName}";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="Users" asp-action="Edit" method="post" asp-route-userId="@Model.Id">
+    
+    <input type="hidden" asp-for="Id" />
+    
+    <div class="form-group">
+        <label asp-for="UserName"></label>
+        <input asp-for="UserName" class="form-control" />
+        <span asp-validation-for="UserName" class="text-danger"></span>
+    </div>
+
+    
+    <div class="d-inline-flex justify-content-end w-100">
+        <button type="submit" class="btn btn-success mr-3">Update</button>
+        <a asp-action="Index" class="btn btn-secondary">Back</a>
+    </div>
+    <br />
+    <br />
+
+</form>

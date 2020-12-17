@@ -97,20 +97,22 @@ namespace TaskBud.Website.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = new IdentityUser { UserName = Input.UserName };
-                var result = await UserManager.CreateAsync(user, Input.Password);
-                if (result.Succeeded)
+                var userResult = await UserManager.CreateAsync(user, Input.Password);
+                if (userResult.Succeeded)
                 {
-                    var codeResult = await InvitationManager.TryConsumeAsync(Input.InvitationCode, Input.UserName);
-
-                    if (codeResult.Succeeded)
+                    var roleResult = await UserManager.AddToRoleAsync(user, "User");
+                    if (roleResult.Succeeded)
                     {
-                        Log.LogInformation("User created a new account with password.");
+                        var codeResult = await InvitationManager.TryConsumeAsync(Input.InvitationCode, Input.UserName);
 
-                        await SignInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
-                    else
-                    {
+                        if (codeResult.Succeeded)
+                        {
+                            Log.LogInformation("User created a new account with password.");
+
+                            await SignInManager.SignInAsync(user, isPersistent: false);
+                            return LocalRedirect(returnUrl);
+                        }
+
                         await UserManager.DeleteAsync(user);
 
                         foreach (var error in codeResult.Errors)
@@ -118,8 +120,12 @@ namespace TaskBud.Website.Areas.Identity.Pages.Account
                             ModelState.AddModelError(string.Empty, error.Description);
                         }
                     }
+                    foreach (var error in roleResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
                 }
-                foreach (var error in result.Errors)
+                foreach (var error in userResult.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
