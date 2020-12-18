@@ -6,7 +6,7 @@
 
 <h2>@ViewBag.Title</h2>
 
-<form asp-controller="Users" asp-action="Edit" method="post" asp-route-userId="@Model.Id">
+<form asp-controller="Users" asp-action="Edit" method="post" asp-route-userId="@Model.Id" autocomplete="off">
     
     <input type="hidden" asp-for="Id" />
     
