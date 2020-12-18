@@ -28,7 +28,7 @@ namespace TaskBud.Business.Services
 
             var adminRole = await TryCreateRoleAsync("Administrator");
             _ = await TryCreateRoleAsync("User");
-            _ = await TryCreateUserAsync("Admin", adminRole.Name);
+            _ = await TryCreateUserAsync("Admin", adminRole.Name, "admin");
 
             await TryAssignUsersAsync();
 
@@ -48,7 +48,7 @@ namespace TaskBud.Business.Services
             return role;
         }
 
-        private async Task<IdentityUser> TryCreateUserAsync(string userName, string roleName)
+        private async Task<IdentityUser> TryCreateUserAsync(string userName, string roleName, string password)
         {
             var admin = await UserManager.FindByNameAsync(userName);
             if (admin != null) 
@@ -59,7 +59,7 @@ namespace TaskBud.Business.Services
                 Email = $"{userName}@{userName}.{userName}",
                 EmailConfirmed = true,
             };
-            _ = await UserManager.CreateAsync(admin, userName);
+            _ = await UserManager.CreateAsync(admin, password);
             _ = await UserManager.AddToRoleAsync(admin, roleName);
 
             return admin;
