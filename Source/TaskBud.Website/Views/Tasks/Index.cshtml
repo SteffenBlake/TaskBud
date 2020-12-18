@@ -6,8 +6,8 @@
     ViewData["Title"] = "Tasks - " + Model.GroupTitle;
 }
 
-<div class="d-flex">
-    <h3 class="flex-grow-1 flex-shrink-1 text-truncate">@ViewData["Title"]</h3>
+<div class="d-flex align-items-end">
+    <h3 class="flex-grow-1 flex-shrink-1">@ViewData["Title"]</h3>
     <div class="flex-shrink-0 flex-grow-0 mb-2">
         <a asp-action="Index" asp-controller="History" class="btn btn-warning btn-sm"><i class="fa fa-fw fa-history"></i></a>
         <a asp-action="Create" asp-route-taskGroupId="@Model.GroupId" class="btn btn-success btn-sm"><i class="fa fa-fw fa-plus-circle"></i></a>
