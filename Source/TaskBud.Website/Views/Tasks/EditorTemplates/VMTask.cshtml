@@ -37,7 +37,7 @@
 
 <div class="form-group">
     <label asp-for="RepeatCron"></label>
-    @Html.EditorFor(m => m.RepeatCron, new { onChange = "setTimeout(showHideStartAssignee,1000)" })
+    @Html.EditorFor(m => m.RepeatCron, new { onChange = "setTimeout(showHideStartAssignee,250)" })
     <span asp-validation-for="RepeatCron" class="text-danger"></span>
 </div>
 
@@ -73,9 +73,9 @@
     function showHideStartAssignee() {
         const target = $("#@(nameof(Model.StartingAssignedUserId))").parent();
         if ($("[name='@(nameof(Model.RepeatCron))']").val()) {
-            target.show(750);
+            target.show(300);
         } else {
-            target.hide(750);
+            target.hide(300);
         }
     }
 
