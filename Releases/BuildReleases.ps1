@@ -1,21 +1,42 @@
-$version = "1.0.3"
+$version = "1.0.4"
 
 $platforms = @("linux-arm", "linux-x64", "osx-x64", "win-arm", "win-x64", "win-x86" )
 
 foreach ($platform in $platforms) {
 
-    $oldPath = "$platform/latest"
-
-    if (Test-Path $oldPath) {
-        $archivePath = "$platform/$platform-$version.zip"
-        if (Test-Path $archivePath) {
-            "$Test-Path already exists. Ending script"
-            exit
+    $archivePath = "$platform/$platform-$version.zip"
+    $projectPath = "$platform/latest"
+    if (Test-Path $archivePath) {
+        "$archivePath already exists. Not bothering to archive"
+    } else {
+        if (-not (Test-Path $projectPath)) {
+            $publishProfile = "$platform Latest"
+            "Starting publish for profile: '$publishProfile'"
+            dotnet publish "../Source/TaskBud.Website/TaskBud.Website.csproj" -p:PublishProfile="$publishProfile" --output "$projectPath" /p:DebugType=None
+        } else {
+            "Published project already exists: '$projectPath'"
+        }
+    
+        if (-not (Test-Path $projectPath)) {
+            "Something broke, project folder cannot be found: '$projectPath'"
+            exit 1
         }
 
-        "Compressing $oldPath to $archivePath"
-        Compress-Archive -Path $oldPath -DestinationPath $archivePath -CompressionLevel "Optimal"
-        "Cleaning up $oldPath"
-        Remove-Item $oldPath -Recurse
+        "Handling any broken LastWriteTime in: '$projectPath'"
+
+        Get-ChildItem -path "$projectPath" -rec -file *.dll | Where-Object {$_.LastWriteTime -lt (Get-Date).AddYears(-20)} | %  { try { $_.LastWriteTime = '01/01/2020 00:00:00' } catch {} }
+
+        "Compressing $projectPath to $archivePath"
+        Compress-Archive -Path $projectPath -DestinationPath $archivePath -CompressionLevel "Optimal"
+
+        if (-not (Test-Path $archivePath)) {
+            "Archiving process failed for '$archivePath'"
+            exit 1
+        }
+    }
+
+    if (Test-Path $projectPath) {
+        "Cleaning up $projectPath"
+        Remove-Item $projectPath -Recurse
     }
 }

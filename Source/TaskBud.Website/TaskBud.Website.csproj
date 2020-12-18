@@ -15,7 +15,6 @@
     <None Include="libman.json" />
   </ItemGroup>
 
-
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.22.1" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="3.1.10" />
@@ -37,9 +36,13 @@
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\TaskBud.Business\TaskBud.Business.csproj" />
   </ItemGroup>
+
+  <!-- Disable generating the .pdb file on publish-->
+  <PropertyGroup>
+    <DebugType Condition=" '$(Configuration)' == 'Release' ">None</DebugType>
+  </PropertyGroup>
 
 </Project>
