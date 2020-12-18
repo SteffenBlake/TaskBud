@@ -11,14 +11,33 @@
  */
 
 (function ($) {
+    var canSwipe = false;
+    var onDragStart = function (event, ui, settings) {
+        canSwipe = false;
+    }
+
     var onDragMove = function(event, ui, settings) {
         var $this = $(this);
 
-        var width = parseFloat($this.css("width"));
-        var current_p = (ui.position.left / width);
-        var target_p = Math.min(Math.max(current_p, -settings.leftMax), settings.rightMax);
-        var targetLeft = Math.round(width * target_p);
-        ui.position.left = targetLeft;
+        // Manually recreate the distance logic, but only on the x axis
+        if (!canSwipe) {
+            if (Math.abs(ui.position.left) >= settings.distanceLeft) {
+                canSwipe = true;
+            }
+        }
+
+        if (canSwipe) {
+            var width = parseFloat($this.css("width"));
+            var current_p = (ui.position.left / width);
+            var target_p = Math.min(Math.max(current_p, -settings.leftMax), settings.rightMax);
+            var targetLeft = Math.round(width * target_p);
+            ui.position.left = targetLeft;
+        } else {
+            // Fix so the swiping doesn't block scrolling
+            window.scrollBy(0, -ui.position.top);
+            ui.position.left = 0;
+        }
+        ui.position.top = 0;
     }
 
     var onDragStop = function(event, ui, settings) {
@@ -35,15 +54,17 @@
             settings.right(this);
             ui.position.left = 0;
         }
+
+        canSwipe = false;
     }
 
-    var swipeable = function(settings) {
-        settings.axis = "x";
-        settings.revert = true;
+    var swipeable = function (settings) {
+        settings.distanceLeft = settings.distanceLeft || 0;
+        settings.revert = settings.revert || true;
         settings.revertDuration = settings.revertDuration || 200;
+        settings.start = (event, ui) => onDragStart.call(event.target, event, ui, settings);
         settings.drag = (event, ui) => onDragMove.call(event.target, event, ui, settings);
         settings.stop = (event, ui) => onDragStop.call(event.target, event, ui, settings);
-
         $(this).draggable(settings);
     }
 
