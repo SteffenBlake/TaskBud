@@ -38,7 +38,7 @@ namespace TaskBud.Business.Services
 
             await HistoryManager.CreatedAsync(user, entity.Id, data.Title);
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Created, data.Id);
+            await TaskHubContext.Clients.All.SendAsync(TaskHub.Created, entity.Id);
 
             return await ReadAsync(user, entity.Id);
         }
@@ -130,7 +130,7 @@ namespace TaskBud.Business.Services
 
             await DBContext.SaveChangesAsync();
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, data.Id);
+            await TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, entity.Id);
 
             return await ReadAsync(user, entity.Id);
         }
