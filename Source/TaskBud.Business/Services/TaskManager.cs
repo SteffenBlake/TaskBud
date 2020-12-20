@@ -25,7 +25,12 @@ namespace TaskBud.Business.Services
             HistoryManager = historyManager;
         }
 
-        public async Task<VMTask> CreateAsync(ClaimsPrincipal user, VMTask data)
+        public string Lookup(string title)
+        {
+            return DBContext.TaskItems.OrderByDescending(t => t.CreationDate).First(t => t.Title == title).Id;
+        }
+
+        public async Task<VMTaskReadData> CreateAsync(ClaimsPrincipal user, VMTaskWriteData data)
         {
             var entity = new TaskItem(); 
             data.Write(DBContext, entity);
@@ -49,7 +54,7 @@ namespace TaskBud.Business.Services
 
             var data = new VMTaskIndex();
 
-            var tasks = VMTask.Fetch(DBContext.TaskItems);
+            var tasks = VMTaskReadData.Fetch(DBContext.TaskItems);
 
             if (taskGroupId != null)
             {
@@ -70,23 +75,23 @@ namespace TaskBud.Business.Services
 
             tasks = tasks.OrderByDescending(t => t.Priority);
 
-            data.Tasks = tasks.Select(VMTask.Read(DBContext)).ToList();
+            data.Tasks = tasks.Select(VMTaskReadData.Read(DBContext)).ToList();
 
             return data;
         }
 
-        public async Task<VMTask> ReadAsync(ClaimsPrincipal user, string taskId)
+        public async Task<VMTaskReadData> ReadAsync(ClaimsPrincipal user, string taskId)
         {
             var entity = await 
-                VMTask.Fetch(DBContext.TaskItems)
+                VMTaskReadData.Fetch(DBContext.TaskItems)
                 .SingleAsync(m => m.Id == taskId);
-            return VMTask.Read(DBContext).Compile().Invoke(entity);
+            return VMTaskReadData.Read(DBContext).Compile().Invoke(entity);
         }
 
-        public async Task<VMTask> UpdateAsync(ClaimsPrincipal user, VMTask data)
+        public async Task<VMTaskReadData> UpdateAsync(ClaimsPrincipal user, VMTaskWriteData data)
         {
             var entity = await 
-                VMTask.Fetch(DBContext.TaskItems)
+                VMTaskReadData.Fetch(DBContext.TaskItems)
                 .SingleAsync(m => m.Id == data.Id);
 
             if (entity.AssignedUserId != data.AssignedUserId)
@@ -135,7 +140,7 @@ namespace TaskBud.Business.Services
             return await ReadAsync(user, entity.Id);
         }
 
-        public async Task<VMTask> Complete(ClaimsPrincipal user, string taskId)
+        public async Task<VMTaskReadData> Complete(ClaimsPrincipal user, string taskId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
 
@@ -163,7 +168,7 @@ namespace TaskBud.Business.Services
             return readData;
         }
 
-        public async Task<VMTask> Assign(ClaimsPrincipal user, string taskId, string userId)
+        public async Task<VMTaskReadData> Assign(ClaimsPrincipal user, string taskId, string userId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
             entity.AssignedUserId = userId;
@@ -176,7 +181,7 @@ namespace TaskBud.Business.Services
             return await ReadAsync(user, entity.Id);
         }
 
-        public async Task<VMTask> UnAssign(ClaimsPrincipal user, string taskId)
+        public async Task<VMTaskReadData> UnAssign(ClaimsPrincipal user, string taskId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
 

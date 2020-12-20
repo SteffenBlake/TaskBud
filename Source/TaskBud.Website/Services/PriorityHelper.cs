@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using TaskBud.Business.Data;
 
-namespace TaskBud.Business.Services
+namespace TaskBud.Website.Services
 {
     public class PriorityHelper
     {

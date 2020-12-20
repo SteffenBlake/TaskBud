@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +14,10 @@ using TaskBud.Business.Services;
 using System.Threading;
 using Markdig;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using TaskBud.Business.Hubs;
+using TaskBud.Website.Services;
+using TaskBud.Website.Swagger;
 
 namespace TaskBud.Website
 {
@@ -28,6 +33,7 @@ namespace TaskBud.Website
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Config
             var config = Configuration.Get<TaskBudConfig>();
 
             if (config.ConnectionType == ConnectionType.INVALID)
@@ -43,9 +49,9 @@ namespace TaskBud.Website
             }
 
             services.AddSingleton(config);
-
             services.AddLogging();
 
+            // Business Services
             services
                 .AddDbContext<TaskBudDbContext>(options =>
                 {
@@ -56,7 +62,6 @@ namespace TaskBud.Website
                         _ => throw new ArgumentOutOfRangeException(nameof(config.ConnectionType))
                     };
                 });
-                
 
             services
                 .AddDefaultIdentity<IdentityUser>(options => 
@@ -69,19 +74,60 @@ namespace TaskBud.Website
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<TaskBudDbContext>();
 
+            services.AddTransient<ApiTokenManager>();
+            services.AddTransient<DBMigrator>();
+            services.AddTransient<HistoryManager>();
+            services.AddTransient<InvitationManager>();
+            services.AddTransient<TaskGroupManager>();
+            services.AddTransient<TaskManager>();
+
+            // Front-end Services
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
             services.AddSignalR();
 
-            services.AddSingleton(new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
+            services.AddSwaggerGen(gen =>
+            {
+                gen.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "TaskBud API",
+                    Description = "API integration for TaskBud",
+                    TermsOfService = new Uri("https://github.com/SteffenBlake/TaskBud/blob/master/LICENSE"),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Steffen Blake",
+                        Email = "steffen.cole.blake@gmail.com",
+                        Url = new Uri("https://github.com/SteffenBlake/TaskBud"),
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "Use under MIT License",
+                        Url = new Uri("https://github.com/SteffenBlake/TaskBud/blob/master/LICENSE"),
+                    }
+                });
 
-            // Business Services
-            services.AddTransient<DBMigrator>();
-            services.AddTransient<InvitationManager>();
-            services.AddTransient<TaskGroupManager>();
-            services.AddTransient<TaskManager>();
-            services.AddTransient<HistoryManager>();
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                gen.IncludeXmlComments(xmlPath);
+
+                gen.DocumentFilter<ApiSwaggerFilter>();
+                gen.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. [See here](/Identity/Account/Manage/ApiAccess)",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "bearer"
+                });
+                gen.OperationFilter<ApiAuthenticationOperationFilter>();
+            });
+
             services.AddTransient<PriorityHelper>();
+            services.AddSingleton(new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
+            services.AddTransient<ApiTokenAuthMiddleWare>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -110,12 +156,15 @@ namespace TaskBud.Website
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            
             app.UseAuthentication();
+
+            app.UseMiddleware<ApiTokenAuthMiddleWare>();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -128,6 +177,14 @@ namespace TaskBud.Website
                 // SignalR hubs
                 endpoints.MapHub<TaskHub>(TaskHub.EndPoint);
             });
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskBud API V1");
+                c.RoutePrefix = "api";
+            });
+
         }
     }
 }

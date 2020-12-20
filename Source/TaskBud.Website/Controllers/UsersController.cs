@@ -18,6 +18,8 @@ namespace TaskBud.Website.Controllers
         }
 
 
+        [HttpGet("")]
+        [HttpGet("index")]
         public IActionResult Index()
         {
             return View();

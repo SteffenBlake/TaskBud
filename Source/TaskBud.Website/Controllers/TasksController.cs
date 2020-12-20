@@ -25,6 +25,7 @@ namespace TaskBud.Website.Controllers
             DBContext = dbContext;
         }
 
+        [HttpGet("")]
         [HttpGet("index")]
         public async Task<IActionResult> Index(string taskGroupId)
         {
@@ -43,12 +44,12 @@ namespace TaskBud.Website.Controllers
         [HttpGet("create")]
         public IActionResult Create(string taskGroupId)
         {
-            var data = new VMTask{ TaskGroupId = taskGroupId };
+            var data = new VMTaskReadData{ TaskGroupId = taskGroupId };
             return View(data);
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create(VMTask writeData)
+        public async Task<IActionResult> Create(VMTaskReadData writeData)
         {
             if (ModelState.IsValid)
             {
@@ -70,7 +71,7 @@ namespace TaskBud.Website.Controllers
         }
 
         [HttpPost("{id}/update")]
-        public async Task<IActionResult> Update(VMTask writeData)
+        public async Task<IActionResult> Update(VMTaskReadData writeData)
         {
             if (ModelState.IsValid)
             {
@@ -85,7 +86,7 @@ namespace TaskBud.Website.Controllers
         }
 
         [HttpPost("{taskId}/assign/{userId?}")]
-        public async Task<IActionResult> Assign(string taskId, string userId)
+        public async Task<IActionResult> Assign(string taskId, string userId = null)
         { 
             userId ??= User.GetLoggedInUserId<string>();
 

@@ -1,0 +1,58 @@
+﻿@page
+@model ApiAccessModel
+@{
+    ViewData["Title"] = "API Access";
+    ViewData["ActivePage"] = ManageNavPages.ApiAccess;
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" model="Model.StatusMessage" />
+<div class="row">
+    <div class="col-md-6">
+        <form id="api-access-form" method="post">
+            <div class="form-group w-100">
+                <label asp-for="Token"></label>
+                <div class="d-flex justify-content-between w-100">
+                    @if (Model.HasToken)
+                    {
+                        <input asp-for="Token" class="form-control"  readonly="readonly" />
+                        <button id="copy-btn" type="button" class="btn btn-primary" style="width: 70pt;">Copy</button>
+                    }
+                    else
+                    {
+                        <input asp-for="Token" class="form-control" disabled="disabled" />
+                        <button type="button" class="btn btn-primary" style="width: 70pt;" disabled="disabled">Copy</button>
+                    }
+                </div>
+            </div>
+            <button type="submit" asp-page-handler="ApiAccess" class="btn btn-primary">Generate New Token</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasToken)
+{
+    <script>
+        function onCopy() {
+            const target = document.getElementById("@nameof(Model.Token)");
+            target.select();
+            target.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+        }
+
+        function onSubmit(e) {
+            if (confirm("Are you sure you want to generate a new token? The old one will become invalid and will no longer work")) {
+                return true;
+            }
+            e.preventDefault();
+            return false;
+        }
+
+        function onReady() {
+            document.getElementById("copy-btn").addEventListener("click", onCopy);
+            document.getElementById("api-access-form").addEventListener("submit", onSubmit);
+        }
+
+        document.addEventListener('DOMContentLoaded', onReady);
+    </script>
+}

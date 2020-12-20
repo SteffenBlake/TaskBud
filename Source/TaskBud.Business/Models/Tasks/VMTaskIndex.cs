@@ -4,7 +4,7 @@ namespace TaskBud.Business.Models.Tasks
 {
     public class VMTaskIndex
     {
-        public IList<VMTask> Tasks { get; set; } = new List<VMTask>();
+        public IList<VMTaskReadData> Tasks { get; set; } = new List<VMTaskReadData>();
 
         public string GroupTitle { get; set; }
         public string GroupId { get; set; }

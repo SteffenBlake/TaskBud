@@ -10,6 +10,7 @@ namespace TaskBud.Business.Data
         {
         }
 
+        public DbSet<ApiToken> ApiTokens { get; set; }
         public DbSet<InvitationCode> InvitationCodes { get; set; }
         public DbSet<TaskGroup> TaskGroups { get; set; }
         public DbSet<TaskItem> TaskItems { get; set; }

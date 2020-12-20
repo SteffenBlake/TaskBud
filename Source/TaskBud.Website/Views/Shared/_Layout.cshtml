@@ -84,7 +84,7 @@
         $("input").focus(() => smoothSlide(document.activeElement));
         $("textarea").focus(() => smoothSlide(document.activeElement));
         $(".collapse").on("show.bs.collapse", (e) => smoothSlide(e.currentTarget));
-        $("h1,h2,h3,h4,h5,h6").fitText("0.9");
+        $("h1,h2").fitText("0.9");
     });
 
     function smoothSlide(element) {
