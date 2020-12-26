@@ -1,4 +1,4 @@
-$version = "1.0.5"
+$version = "1.1.0"
 
 $platforms = @("linux-arm", "linux-x64", "osx-x64", "win-arm", "win-x64", "win-x86" )
 
@@ -12,7 +12,7 @@ foreach ($platform in $platforms) {
         if (-not (Test-Path $projectPath)) {
             $publishProfile = "$platform Latest"
             "Starting publish for profile: '$publishProfile'"
-            dotnet publish "../Source/TaskBud.Website/TaskBud.Website.csproj" -p:PublishProfile="$publishProfile" --output "$projectPath" /p:DebugType=None
+            dotnet publish "../Source/TaskBud.Website/TaskBud.Website.csproj" -p:PublishProfile="$publishProfile" --output "$projectPath" -p:DebugType=None
         } else {
             "Published project already exists: '$projectPath'"
         }
