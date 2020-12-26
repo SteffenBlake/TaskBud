@@ -3,6 +3,10 @@ Simple and  Lightweight Task Organizer/Manager Web Server, written in Asp.Net MV
 
 <img src="Resources/IndexPage.jpg"> <img src="Resources/HistoryPage.jpg">
 
+# Links
+* [Setup Guide](https://github.com/SteffenBlake/TaskBud/wiki/Setup-Guide)
+* [Usage Guide](https://github.com/SteffenBlake/TaskBud/wiki/Usage-Guide)
+
 # Features and Functionality
 
 * Supports Markdown in Task Descriptions
