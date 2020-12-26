@@ -37,7 +37,7 @@ Work in progress before first release!
 - [ ] Add configuration and support for SSL Signing / HTTPS
 - [x] Add a "Wait until" property to Tasks
 - [x] Add a "Automatic Repeat" functionality to Tasks
-- [ ] Expose usable API for IoT stuff / IFTTT / Home Assistants
+- [x] Expose usable API for IoT stuff / IFTTT / Home Assistants
 - [ ] Setup wiki and document better
 - [ ] Make some "how to use" youtube videos
 ...
