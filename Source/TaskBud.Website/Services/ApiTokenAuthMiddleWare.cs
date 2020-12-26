@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -44,21 +45,25 @@ namespace TaskBud.Website.Services
                 if (!path.StartsWith("/api/") || path == "/api/index.html")
                     return true;
 
-                var tokenHeader = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ");
-                if (tokenHeader == null)
-                    return false;
-
-                if (tokenHeader.Length != 2)
-                    return false;
-
-                if (tokenHeader[0].ToLower() != "bearer")
-                    return false;
-
-                var token = tokenHeader[1];
+                var token = context.Request.Query["Bearer"].First();
 
                 var userId = await TokenManager.ValidateAsync(token);
+                var user = await UserManager.FindByIdAsync(userId);
 
-                context.Items["User"] = await UserManager.FindByIdAsync(userId);
+                context.Items["User"] = user;
+
+                var userRole = (await UserManager.GetRolesAsync(user)).Single();
+                var userName = user.Id;
+
+                // Identity Principal
+                var claims = new[]
+                {
+                    new Claim(ClaimTypes.Name, userName),
+                    new Claim(ClaimTypes.Role, userRole),
+                    new Claim(ClaimTypes.NameIdentifier, userName),
+                };
+                var identity = new ClaimsIdentity(claims, "basic");
+                context.User = new ClaimsPrincipal(identity);
 
                 return true;
             }

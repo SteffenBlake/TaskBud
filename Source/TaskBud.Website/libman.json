@@ -8,16 +8,29 @@
     },
     {
       "library": "jqueryui-touch-punch@0.2.3",
-      "destination": "wwwroot/jqueryui-touch-punch/"
+      "destination": "wwwroot/lib/jqueryui-touch-punch/"
     },
     {
       "library": "jqueryui@1.12.1",
-      "destination": "wwwroot/jqueryui/"
+      "destination": "wwwroot/lib/jqueryui/"
     },
     {
       "provider": "unpkg",
-      "library": "@microsoft/signalr@3.1.5",
-      "destination": "wwwroot/js/signalr/"
+      "library": "@microsoft/signalr@3.1.8",
+      "destination": "wwwroot/lib/signalr",
+      "files": [
+        "dist/browser/signalr.js",
+        "dist/browser/signalr.min.js"
+      ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "cronstrue@1.106.0",
+      "destination": "wwwroot/lib/cronstrue/",
+      "files": [
+        "dist/cronstrue.js",
+        "dist/cronstrue.min.js"
+      ]
     }
   ]
 }

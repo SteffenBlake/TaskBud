@@ -113,15 +113,7 @@ namespace TaskBud.Website
                 gen.IncludeXmlComments(xmlPath);
 
                 gen.DocumentFilter<ApiSwaggerFilter>();
-                gen.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. [See here](/Identity/Account/Manage/ApiAccess)",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = "bearer"
-                });
+
                 gen.OperationFilter<ApiAuthenticationOperationFilter>();
             });
 
@@ -157,14 +149,12 @@ namespace TaskBud.Website
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
             
-            app.UseAuthentication();
-
             app.UseMiddleware<ApiTokenAuthMiddleWare>();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
