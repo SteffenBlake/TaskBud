@@ -10,12 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TaskBud.Business.Data;
 using TaskBud.Business;
-using TaskBud.Business.Services;
-using System.Threading;
 using Markdig;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using TaskBud.Business.Hubs;
+using TaskBud.Business.Services.Abstractions;
+using TaskBud.Business.Services.Implementations;
+using TaskBud.Website.Hubs;
 using TaskBud.Website.Services;
 using TaskBud.Website.Swagger;
 
@@ -74,17 +74,19 @@ namespace TaskBud.Website
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<TaskBudDbContext>();
 
-            services.AddTransient<ApiTokenManager>();
-            services.AddTransient<DBMigrator>();
-            services.AddTransient<HistoryManager>();
-            services.AddTransient<InvitationManager>();
-            services.AddTransient<TaskGroupManager>();
-            services.AddTransient<TaskManager>();
+            services.AddTransient<IApiTokenManager, ApiTokenManager>();
+            services.AddTransient<IDBMigrator, DBMigrator>();
+            services.AddTransient<IHistoryManager, HistoryManager>();
+            services.AddTransient<IInvitationManager, InvitationManager>();
+            services.AddTransient<ITaskGroupManager, TaskGroupManager>();
+            services.AddTransient<ITaskManager, TaskManager>();
 
             // Front-end Services
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
             services.AddRazorPages();
             services.AddSignalR();
+
+            services.AddTransient<ITaskEventHandler, TaskEventHandler>();
 
             services.AddSwaggerGen(gen =>
             {
@@ -133,7 +135,7 @@ namespace TaskBud.Website
 
                 loggerFactory.AddFile(config.Logging.Path, config.Logging.MinimumLevel);
 
-                var migrator = serviceScope.ServiceProvider.GetRequiredService<DBMigrator>();
+                var migrator = serviceScope.ServiceProvider.GetRequiredService<IDBMigrator>();
                 migrator.ExecuteAsync().Wait();
             }
 

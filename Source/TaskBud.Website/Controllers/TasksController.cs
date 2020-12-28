@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TaskBud.Business.Data;
 using TaskBud.Business.Extensions;
-using TaskBud.Business.Hubs;
 using TaskBud.Business.Models.Tasks;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Controllers
 {
@@ -16,13 +12,11 @@ namespace TaskBud.Website.Controllers
     [Route("tasks")]
     public class TasksController : Controller
     {
-        private TaskManager TaskManager { get; }
-        private TaskBudDbContext DBContext { get; }
+        private ITaskManager TaskManager { get; }
 
-        public TasksController(TaskManager taskManager, TaskBudDbContext dbContext)
+        public TasksController(ITaskManager taskManager)
         {
             TaskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
-            DBContext = dbContext;
         }
 
         [HttpGet("")]

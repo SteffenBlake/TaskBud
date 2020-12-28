@@ -1,22 +1,21 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TaskBud.Business.Data;
+using TaskBud.Business.Services.Abstractions;
 
-namespace TaskBud.Business.Services
+namespace TaskBud.Business.Services.Implementations
 {
-    public class DBMigrator
+    public class DBMigrator : IDBMigrator
     {
-        private TaskBudConfig Config { get; }
         private TaskBudDbContext DbContext { get; }
         private UserManager<IdentityUser> UserManager { get; }
         private RoleManager<IdentityRole> RoleManager { get; }
 
-        public DBMigrator(TaskBudConfig config, TaskBudDbContext dbContext, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        public DBMigrator(TaskBudDbContext dbContext, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            Config = config ?? throw new ArgumentNullException(nameof(config));
             DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             UserManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             RoleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -39,7 +38,7 @@ namespace TaskBud.Business.Services
         {
             var role = await RoleManager.FindByNameAsync(roleName);
 
-            if (role != null) 
+            if (role != null)
                 return role;
 
             role = new IdentityRole(roleName);
@@ -51,7 +50,7 @@ namespace TaskBud.Business.Services
         private async Task<IdentityUser> TryCreateUserAsync(string userName, string roleName, string password)
         {
             var admin = await UserManager.FindByNameAsync(userName);
-            if (admin != null) 
+            if (admin != null)
                 return admin;
 
             admin = new IdentityUser(userName)

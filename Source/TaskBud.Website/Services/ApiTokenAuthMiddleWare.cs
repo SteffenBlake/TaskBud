@@ -1,22 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Services
 {
     public class ApiTokenAuthMiddleWare : IMiddleware
     {
-        private ApiTokenManager TokenManager { get; }
+        private IApiTokenManager TokenManager { get; }
         private UserManager<IdentityUser> UserManager { get; }
 
-        public ApiTokenAuthMiddleWare(ApiTokenManager tokenManager, UserManager<IdentityUser> userManager)
+        public ApiTokenAuthMiddleWare(IApiTokenManager tokenManager, UserManager<IdentityUser> userManager)
         {
             TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             UserManager = userManager ?? throw new ArgumentNullException(nameof(userManager));

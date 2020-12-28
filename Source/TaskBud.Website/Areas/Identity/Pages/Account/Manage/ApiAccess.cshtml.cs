@@ -1,21 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using TaskBud.Business.Extensions;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Areas.Identity.Pages.Account.Manage
 {
     public partial class ApiAccessModel : PageModel
     {
-        private ApiTokenManager TokenManager { get; }
+        private IApiTokenManager TokenManager { get; }
 
-        public ApiAccessModel(ApiTokenManager tokenManager)
+        public ApiAccessModel(IApiTokenManager tokenManager)
         {
             TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
         }

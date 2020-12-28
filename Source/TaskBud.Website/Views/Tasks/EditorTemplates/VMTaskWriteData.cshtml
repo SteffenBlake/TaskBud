@@ -1,12 +1,12 @@
 ﻿@using TaskBud.Business.Data
-@using TaskBud.Business.Services
 @using TaskBud.Website.Extensions
 @using Microsoft.AspNetCore.Identity
+@using TaskBud.Business.Services.Abstractions
 @using TaskBud.Website.Services
 @model TaskBud.Business.Models.Tasks.VMTaskWriteData
 
 @inject PriorityHelper PriorityHelper
-@inject TaskGroupManager TaskGroupManager
+@inject ITaskGroupManager TaskGroupManager
 @inject UserManager<IdentityUser> UserManager
 
 <input type="hidden" asp-for="Id" />

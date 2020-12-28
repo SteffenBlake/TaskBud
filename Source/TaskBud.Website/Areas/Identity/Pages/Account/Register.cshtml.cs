@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -11,9 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Areas.Identity.Pages.Account
 {
@@ -23,13 +19,13 @@ namespace TaskBud.Website.Areas.Identity.Pages.Account
         private ILogger<RegisterModel> Log { get; }
         private SignInManager<IdentityUser> SignInManager { get; }
         private UserManager<IdentityUser> UserManager { get; }
-        private InvitationManager InvitationManager { get; }
+        private IInvitationManager InvitationManager { get; }
         private IEmailSender EmailSender { get; }
 
         public RegisterModel(
             ILogger<RegisterModel> log,
             UserManager<IdentityUser> userManager,
-            InvitationManager invitationManager,
+            IInvitationManager invitationManager,
             SignInManager<IdentityUser> signInManager,
             IEmailSender emailSender)
         {

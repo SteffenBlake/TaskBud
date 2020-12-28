@@ -3,33 +3,38 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Cronos;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using TaskBud.Business.Data;
 using TaskBud.Business.Extensions;
-using TaskBud.Business.Hubs;
 using TaskBud.Business.Models.Tasks;
+using TaskBud.Business.Services.Abstractions;
 
-namespace TaskBud.Business.Services
+namespace TaskBud.Business.Services.Implementations
 {
-    public class TaskManager
+    /// <summary>
+    /// Non-injectable implementation for <see cref="ITaskManager"/>
+    /// For Dependency injection, inject the <see cref="ITaskManager"/>
+    /// </summary>
+    public class TaskManager : ITaskManager
     {
         private TaskBudDbContext DBContext { get; }
-        private IHubContext<TaskHub> TaskHubContext { get; }
-        private HistoryManager HistoryManager { get; }
+        private IHistoryManager HistoryManager { get; }
+        private ITaskEventHandler TaskEventHandler { get; }
 
-        public TaskManager(TaskBudDbContext dbContext, IHubContext<TaskHub> taskHubContext, HistoryManager historyManager)
+        public TaskManager(TaskBudDbContext dbContext, IHistoryManager historyManager, ITaskEventHandler taskEventHandler)
         {
             DBContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            TaskHubContext = taskHubContext ?? throw new ArgumentNullException(nameof(taskHubContext));
-            HistoryManager = historyManager;
+            HistoryManager = historyManager ?? throw new ArgumentNullException(nameof(historyManager));
+            TaskEventHandler = taskEventHandler ?? throw new ArgumentNullException(nameof(taskEventHandler));
         }
 
+        /// <inheritdoc/>
         public string Lookup(string title)
         {
             return DBContext.TaskItems.OrderByDescending(t => t.CreationDate).First(t => t.Title == title).Id;
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> CreateAsync(ClaimsPrincipal user, VMTaskWriteData data)
         {
             var entity = new TaskItem(); 
@@ -43,11 +48,12 @@ namespace TaskBud.Business.Services
 
             await HistoryManager.CreatedAsync(user, entity.Id, data.Title);
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Created, entity.Id);
+            await TaskEventHandler.OnCreatedAsync(entity.Id);
 
             return await ReadAsync(user, entity.Id);
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskIndex> IndexAsync(ClaimsPrincipal user, string taskGroupId = null)
         {
             var userId = user.GetLoggedInUserId<string>();
@@ -80,6 +86,7 @@ namespace TaskBud.Business.Services
             return data;
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> ReadAsync(ClaimsPrincipal user, string taskId)
         {
             var entity = await 
@@ -88,6 +95,7 @@ namespace TaskBud.Business.Services
             return VMTaskReadData.Read(DBContext).Compile().Invoke(entity);
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> UpdateAsync(ClaimsPrincipal user, VMTaskWriteData data)
         {
             var entity = await 
@@ -135,11 +143,12 @@ namespace TaskBud.Business.Services
 
             await DBContext.SaveChangesAsync();
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Updated, entity.Id);
+            await TaskEventHandler.OnUpdatedAsync(entity.Id);
 
             return await ReadAsync(user, entity.Id);
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> Complete(ClaimsPrincipal user, string taskId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
@@ -162,12 +171,13 @@ namespace TaskBud.Business.Services
             DBContext.Update(entity);
             await DBContext.SaveChangesAsync();
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Completed, taskId);
+            await TaskEventHandler.OnCompletedAsync(taskId);
             var readData = await ReadAsync(user, entity.Id);
 
             return readData;
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> Assign(ClaimsPrincipal user, string taskId, string userId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
@@ -176,11 +186,12 @@ namespace TaskBud.Business.Services
             DBContext.Update(entity);
             await DBContext.SaveChangesAsync();
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.Assigned, userId, taskId);
+            await TaskEventHandler.OnAssignedAsync(userId, taskId);
 
             return await ReadAsync(user, entity.Id);
         }
 
+        /// <inheritdoc/>
         public async Task<VMTaskReadData> UnAssign(ClaimsPrincipal user, string taskId)
         {
             var entity = await DBContext.TaskItems.FindAsync(taskId);
@@ -191,7 +202,7 @@ namespace TaskBud.Business.Services
             DBContext.Update(entity);
             await DBContext.SaveChangesAsync();
 
-            await TaskHubContext.Clients.All.SendAsync(TaskHub.UnAssigned, previousUserId, taskId);
+            await TaskEventHandler.OnUnAssignedAsync(previousUserId, taskId);
 
             return await ReadAsync(user, entity.Id);
         }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Controllers
 {
@@ -9,8 +9,8 @@ namespace TaskBud.Website.Controllers
     [Authorize(Roles ="Administrator")]
     public class InvitationsController : Controller
     {
-        private InvitationManager InvitationManager { get; }
-        public InvitationsController(InvitationManager invitationManager)
+        private IInvitationManager InvitationManager { get; }
+        public InvitationsController(IInvitationManager invitationManager)
         {
             InvitationManager = invitationManager ?? throw new System.ArgumentNullException(nameof(invitationManager));
         }

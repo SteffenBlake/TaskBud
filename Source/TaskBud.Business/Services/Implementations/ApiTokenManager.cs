@@ -2,14 +2,16 @@
 using System.Linq;
 using System.Threading.Tasks;
 using TaskBud.Business.Data;
+using TaskBud.Business.Services.Abstractions;
 
-namespace TaskBud.Business.Services
+namespace TaskBud.Business.Services.Implementations
 {
     /// <summary>
-    /// Injectable service for management of Api Access Tokens
+    /// Non-injectable implementation for <see cref="IApiTokenManager"/>
+    /// For Dependency injection, inject the <see cref="IApiTokenManager"/>
     /// </summary>
-    public class ApiTokenManager
-    {
+    public class ApiTokenManager : IApiTokenManager
+        {
         private TaskBudDbContext DBContext { get; }
 
         public ApiTokenManager(TaskBudDbContext dbContext)
@@ -17,21 +19,13 @@ namespace TaskBud.Business.Services
             DBContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        /// <summary>
-        /// Gets the users associated Api Token, if they have one
-        /// </summary>
-        /// <param name="userId">Id of the user</param>
-        /// <returns>The users token, or null if they don't have one.</returns>
+        /// <inheritdoc/>
         public string ForUser(string userId)
         {
             return DBContext.ApiTokens.FirstOrDefault(t => t.UserId == userId)?.Token ?? null;
         }
 
-        /// <summary>
-        /// Generates a new Api Access Token for a given user, deleting any old tokens they had prior
-        /// </summary>
-        /// <param name="userId">Id of the User to generate a token for</param>
-        /// <returns>The generated Api Access Token</returns>
+        /// <inheritdoc/>
         public async Task<string> GenerateAsync(string userId)
         {
             ClearTokens(userId);
@@ -48,20 +42,13 @@ namespace TaskBud.Business.Services
             return entity.Token;
         }
 
-        /// <summary>
-        /// Validates an API Access Token and returns the user Id associated with it
-        /// </summary>
-        /// <param name="token">The authorization token for the user</param>
-        /// <returns>Associated User Id for <see cref="token"/></returns>
+        /// <inheritdoc/>
         public async Task<string> ValidateAsync(string token)
         {
             return (await DBContext.FindAsync<ApiToken>(token)).UserId;
         }
 
-        /// <summary>
-        /// Deletes all existing Api Access Tokens for a given user
-        /// </summary>
-        /// <param name="userId">Id of the user to clear tokens for</param>
+        /// <inheritdoc/>
         public async Task ClearAsync(string userId)
         {
             ClearTokens(userId);

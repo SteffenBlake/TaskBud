@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using TaskBud.Business.Data;
 using TaskBud.Business.Models.Invitations;
+using TaskBud.Business.Services.Abstractions;
 
-namespace TaskBud.Business.Services
+namespace TaskBud.Business.Services.Implementations
 {
-    public class InvitationManager
+    /// <summary>
+    /// Non-injectable implementation for <see cref="IInvitationManager"/>
+    /// For Dependency injection, inject the <see cref="IInvitationManager"/>
+    /// </summary>
+    public class InvitationManager : IInvitationManager
     {
-        public ILogger<InvitationManager> Log { get; }
+        private ILogger<InvitationManager> Log { get; }
         private TaskBudConfig Config { get; }
         private TaskBudDbContext DbContext { get; }
         private UserManager<IdentityUser> UserManager { get; }
@@ -27,6 +32,7 @@ namespace TaskBud.Business.Services
             UserManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
+        /// <inheritdoc/>
         public async Task<VMInvitation> CreateAsync()
         {
             DateTimeOffset? expiration = null;
@@ -48,6 +54,7 @@ namespace TaskBud.Business.Services
         }
 
 
+        /// <inheritdoc/>
         public Task<VMInvitationIndex> IndexAsync(bool showHidden = false)
         {
             var invitations = DbContext.InvitationCodes
@@ -64,6 +71,7 @@ namespace TaskBud.Business.Services
             return Task.FromResult(data);
         }
 
+        /// <inheritdoc/>
         public Task<VMInvitation> ReadAsync(string code)
         {
             var data = DbContext.InvitationCodes
@@ -75,6 +83,7 @@ namespace TaskBud.Business.Services
             return Task.FromResult(data);
         }
 
+        /// <inheritdoc/>
         public async Task<bool> ValidateAsync(string code)
         {
             var invitation = await DbContext.InvitationCodes.FindAsync(code);
@@ -92,6 +101,7 @@ namespace TaskBud.Business.Services
             return true;
         }
 
+        /// <inheritdoc/>
         public async Task<bool> IsExpiredAsync(string code)
         {
             var invitation = await DbContext.InvitationCodes.FindAsync(code);
@@ -113,6 +123,7 @@ namespace TaskBud.Business.Services
 
         }
 
+        /// <inheritdoc/>
         public async Task<IdentityResult> TryConsumeAsync(string code, string userName)
         {
             var userTask = UserManager.FindByNameAsync(userName);
@@ -133,6 +144,7 @@ namespace TaskBud.Business.Services
             return IdentityResult.Success;
         }
 
+        /// <inheritdoc/>
         public async Task<VMInvitation> ExpireAsync(string code)
         {
             var model = await DbContext.InvitationCodes.FindAsync(code);

@@ -31,6 +31,23 @@
         "dist/cronstrue.js",
         "dist/cronstrue.min.js"
       ]
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "bootstrap@4.5.3",
+      "destination": "wwwroot/lib/bootstrap/",
+      "files": [
+        "dist/js/bootstrap.bundle.min.js",
+        "dist/css/bootstrap.min.css"
+      ]
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "jquery@3.5.1",
+      "destination": "wwwroot/lib/jquery/",
+      "files": [
+        "dist/jquery.min.js"
+      ]
     }
   ]
 }

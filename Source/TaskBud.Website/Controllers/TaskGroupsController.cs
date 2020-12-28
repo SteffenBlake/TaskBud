@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskBud.Business.Models.TaskGroups;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Controllers
 {
@@ -11,8 +11,8 @@ namespace TaskBud.Website.Controllers
     [Authorize(Roles ="Administrator")]
     public class TaskGroupsController : Controller
     {
-        private TaskGroupManager Manager { get; }
-        public TaskGroupsController(TaskGroupManager manager)
+        private ITaskGroupManager Manager { get; }
+        public TaskGroupsController(ITaskGroupManager manager)
         {
             Manager = manager ?? throw new ArgumentNullException(nameof(manager));
         }

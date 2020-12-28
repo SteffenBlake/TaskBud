@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TaskBud.Business.Data;
 using TaskBud.Business.Extensions;
-using TaskBud.Business.Hubs;
 using TaskBud.Business.Models.Tasks;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Controllers
 {
@@ -16,9 +12,9 @@ namespace TaskBud.Website.Controllers
     [Route("api/tasks")]
     public class ApiTasksController : ControllerBase
     {
-        private TaskManager TaskManager { get; }
+        private ITaskManager TaskManager { get; }
 
-        public ApiTasksController(TaskManager taskManager)
+        public ApiTasksController(ITaskManager taskManager)
         {
             TaskManager = taskManager ?? throw new ArgumentNullException(nameof(taskManager));
         }

@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskBud.Business.Services;
+using TaskBud.Business.Services.Abstractions;
 
 namespace TaskBud.Website.Controllers
 {
@@ -11,8 +10,8 @@ namespace TaskBud.Website.Controllers
     [Route("history")]
     public class HistoryController : Controller
     {
-        private HistoryManager HistoryManager { get; }
-        public HistoryController(HistoryManager historyManager)
+        private IHistoryManager HistoryManager { get; }
+        public HistoryController(IHistoryManager historyManager)
         {
             HistoryManager = historyManager ?? throw new ArgumentNullException(nameof(historyManager));
         }
